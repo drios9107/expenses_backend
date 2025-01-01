@@ -7,7 +7,7 @@ const subCategoriesModel = require("../models/subCategory")
 exports.getDashboard = async (req, res) => {
     try {
         const { currentMonth, currentYear } = req.body;
-        if (!currentMonth || !currentYear)
+        if (isNaN(currentMonth) || !currentYear)
             res.status(400).json({ status: 'error', message: 'Missing params' })
 
         const currentMonthFirstDay = moment().set({ D: 1, M: currentMonth, y: currentYear }).valueOf();
@@ -25,6 +25,15 @@ exports.getDashboard = async (req, res) => {
         console.log('***here', { currentMonthFirstDay, nextMonthFirstDay }, currentMonthTransactions)
 
         let monthExpenses = 0;
+
+        if (currentMonthTransactions?.length === 0) {
+            return res.json({
+                status: 'success',
+                monthExpenses: 0,
+                categoryData: { labels: [], values: [] },
+                subCategoryData: { labels: [], values: [] }
+            })
+        }
 
         const result = await currentMonthTransactions.reduce(async (acc, item) => {
             const category = await dbFunctions.findOne(categoriesModel, item.category)
