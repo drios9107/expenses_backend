@@ -53,7 +53,6 @@ const schema = new mongoose.Schema({
 //                     balance?.amount + data?.amount;
 
 //                 const result = await balanceModel.updateOne({ _id: balance?._id }, { amount: balanceResult }).exec();
-//                 console.log('***result', result)
 //             } else if (!balance)
 //                 await balanceModel.create({ amount: data?.amount }).exec();
 //         }
@@ -69,14 +68,12 @@ const schema = new mongoose.Schema({
 
 //         if (transaction?.type === 'cup') {
 //             const balance = (await balanceModel.find({}).exec())?.[0];
-//             console.log('***balance delete', balance)
 
 //             const balanceResult = transaction?.isExpense ?
 //                 balance?.amount + transaction?.amount :
 //                 balance?.amount - transaction?.amount;
 
 //             const result = await balanceModel.updateOne({ _id: balance?._id }, { amount: balanceResult }).exec();
-//             console.log('***result', result)
 //         }
 //     } catch (error) {
 //         console.log('***onDelete error', error)

@@ -10,7 +10,7 @@ exports.getDashboard = async (req, res) => {
         if (isNaN(currentMonth) || !currentYear)
             res.status(400).json({ status: 'error', message: 'Missing params' })
 
-        const currentMonthFirstDay = moment().set({ D: 1, M: currentMonth, y: currentYear }).valueOf();
+        const currentMonthFirstDay = moment().set({ D: 1, M: currentMonth, y: currentYear, h: 0, m: 0, s: 0, milliseconds: 0 }).valueOf();
         const nextMonthFirstDay = moment(currentMonthFirstDay).add(1, 'month').valueOf();
 
         const currentMonthTransactions = await dbFunctions.find(transactionsModel, {
@@ -21,8 +21,6 @@ exports.getDashboard = async (req, res) => {
             isExpense: true,
             type: 'cup'
         }, { amount: -1 });
-
-        console.log('***here', { currentMonthFirstDay, nextMonthFirstDay }, currentMonthTransactions)
 
         let monthExpenses = 0;
 
@@ -57,7 +55,7 @@ exports.getDashboard = async (req, res) => {
 
         const categoryData = { labels: Object.keys(result.category), values: Object.values(result.category) };
         const subCategoryData = { labels: Object.keys(result.subCategory)?.slice(0, 10), values: Object.values(result.subCategory)?.slice(0, 10) };
-        console.log('****result', { categoryData, subCategoryData })
+
         res.json({
             status: 'success',
             monthExpenses: parseFloat(monthExpenses).toFixed(2),
@@ -71,6 +69,16 @@ exports.getDashboard = async (req, res) => {
 }
 
 const balanceFunction = async () => {
+
+    const groupBy = {
+        $group: {
+            _id: null,
+            total: {
+                $sum: "$amount"
+            }
+        }
+    }
+
     const expenseResponse = await transactionsModel.aggregate([
         {
             $match: {
@@ -78,14 +86,7 @@ const balanceFunction = async () => {
                 isExpense: true
             }
         },
-        {
-            $group: {
-                _id: null,
-                total: {
-                    $sum: "$amount"
-                }
-            }
-        }
+        { ...groupBy }
     ])
 
     const incomeResponse = await transactionsModel.aggregate([
@@ -95,16 +96,8 @@ const balanceFunction = async () => {
                 isExpense: false
             }
         },
-        {
-            $group: {
-                _id: null,
-                total: {
-                    $sum: "$amount"
-                }
-            }
-        }
+        { ...groupBy }
     ])
-
     return parseFloat(incomeResponse[0].total - expenseResponse[0].total).toFixed(2);
 }
 
