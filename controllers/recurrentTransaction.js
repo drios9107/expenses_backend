@@ -41,7 +41,7 @@ exports.getDetails = async (req, res) => {
 
 exports.create = async (req, res) => {
     try {
-        const { isRecurrent, frequency, weekDays, monthDays, ...transaction } = req.body; const recurrentTransactionResponse = await dbFunctions.insertOne(model, { isRecurrent, frequency, weekDays, monthDays, ...transaction });
+        const recurrentTransactionResponse = await dbFunctions.insertOne(model, req.body);
         if (recurrentTransactionResponse?.status === 'error') {
             res.status(500)
             res.json(recurrentTransactionResponse)
@@ -112,7 +112,7 @@ const handleTransaction = async (d, i) => {
 }
 
 exports.runRecurrence = async (req, res) => {
-    const recurrentTransactions = await dbFunctions.find(recurrentTransactionModel);
+    const recurrentTransactions = await dbFunctions.find(recurrentTransactionModel, { isActive: true });
     if (recurrentTransactions?.status === 'error') {
         res.status(500)
         res.json(recurrentTransactions)

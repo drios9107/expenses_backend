@@ -41,6 +41,10 @@ const schema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    isActive: {
+        type: Boolean,
+        required: false,
+    },
 })
 
 module.exports = mongoose.model('recurrentTransaction', schema)
