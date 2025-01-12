@@ -1,5 +1,23 @@
 const dbFunctions = require("../utils/mongooseDbFunctions")
-const model = require("../models/transaction")
+const model = require("../models/transaction");
+const { getCurrentMonthTransactions } = require("../utils/common");
+const moment = require('moment')
+
+exports.getCurrentMonth = async (req, res) => {
+    try {
+        const currentMonth = moment().get('M');
+        const currentYear = moment().get('Y');
+        const items = await getCurrentMonthTransactions(currentMonth, currentYear, true);
+
+        res.json({
+            status: 'success',
+            data: items
+        })
+    } catch (err) {
+        res.status(500)
+        res.json({ status: 'error', message: err.message })
+    }
+}
 
 exports.getAll = async (req, res) => {
     try {

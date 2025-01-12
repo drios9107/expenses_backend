@@ -1,8 +1,8 @@
 const dbFunctions = require("../utils/mongooseDbFunctions")
-const moment = require('moment')
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
+const { getCurrentMonthTransactions } = require("../utils/common")
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -10,18 +10,7 @@ exports.getDashboard = async (req, res) => {
         if (isNaN(currentMonth) || !currentYear)
             res.status(400).json({ status: 'error', message: 'Missing params' })
 
-        const currentMonthFirstDay = moment().set({ D: 1, M: currentMonth, y: currentYear, h: 0, m: 0, s: 0, milliseconds: 0 }).valueOf();
-        const nextMonthFirstDay = moment(currentMonthFirstDay).add(1, 'month').valueOf();
-
-        const currentMonthTransactions = await dbFunctions.find(transactionsModel, {
-            date: {
-                $gte: currentMonthFirstDay,
-                $lt: nextMonthFirstDay
-            },
-            isExpense: true,
-            type: 'cup'
-        }, { amount: -1 });
-
+        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear);
         let monthExpenses = 0;
 
         if (currentMonthTransactions?.length === 0) {
