@@ -39,7 +39,7 @@ exports.getBalanceFunction = async (type = 'cup') => {
     return parseFloat(income - expense).toFixed(2);
 }
 
-exports.getCurrentMonthTransactions = async (currentMonth, currentYear, { showAll = false, replaceFields = false }) => {
+exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options = { showAll: false, replaceFields: false }) => {
     const currentMonthFirstDay = moment().set({ D: 1, M: currentMonth, y: currentYear, h: 0, m: 0, s: 0, milliseconds: 0 }).valueOf();
     const nextMonthFirstDay = moment(currentMonthFirstDay).add(1, 'month').valueOf();
     const search = {
@@ -49,7 +49,7 @@ exports.getCurrentMonthTransactions = async (currentMonth, currentYear, { showAl
         },
     }
 
-    if (!showAll) {
+    if (!options?.showAll) {
         search['isExpense'] = true
         search['type'] = 'cup'
     }
@@ -58,7 +58,7 @@ exports.getCurrentMonthTransactions = async (currentMonth, currentYear, { showAl
     const categories = await dbFunctions.find(categoriesModel);
     const subCategories = await dbFunctions.find(subCategoriesModel);
 
-    if (replaceFields) {
+    if (options?.replaceFields) {
         return currentMonthTransactions.map((i, index) => {
             const data = { ...(i?._doc ?? i) };
             if (data?.category)
