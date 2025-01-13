@@ -7,7 +7,7 @@ exports.getCurrentMonth = async (req, res) => {
     try {
         const currentMonth = moment().get('M');
         const currentYear = moment().get('Y');
-        const items = await getCurrentMonthTransactions(currentMonth, currentYear, true);
+        const items = await getCurrentMonthTransactions(currentMonth, currentYear, { showAll: true, replaceFields: true });
 
         res.json({
             status: 'success',
