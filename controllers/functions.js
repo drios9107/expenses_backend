@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
-const { getCurrentMonthTransactions } = require("../utils/common")
+const { getCurrentMonthTransactions, getBalanceFunction } = require("../utils/common")
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -57,43 +57,6 @@ exports.getDashboard = async (req, res) => {
     }
 }
 
-const balanceFunction = async () => {
-
-    const groupBy = {
-        $group: {
-            _id: null,
-            total: {
-                $sum: "$amount"
-            }
-        }
-    }
-
-    const expenseResponse = await transactionsModel.aggregate([
-        {
-            $match: {
-                type: "cup",
-                isExpense: true
-            }
-        },
-        { ...groupBy }
-    ])
-
-    const incomeResponse = await transactionsModel.aggregate([
-        {
-            $match: {
-                type: "cup",
-                isExpense: false
-            }
-        },
-        { ...groupBy }
-    ])
-    return parseFloat(incomeResponse[0].total - expenseResponse[0].total).toFixed(2);
-}
-
-exports.exportedBalanceFunction = async () => {
-    return await balanceFunction();
-}
-
 exports.getBalance = async (req, res) => {
     const transactionsResponse = await dbFunctions.find(transactionsModel, { isExpense: false, type: 'cup' }, { date: -1 });
     if (transactionsResponse?.status === 'error') {
@@ -103,7 +66,10 @@ exports.getBalance = async (req, res) => {
     const lastIncome = parseFloat(transactionsResponse?.[0]?.amount ?? 0).toFixed(2);
     const lastIncomeDate = transactionsResponse?.[0]?.date;
 
-    const balance = await balanceFunction();
+    const balance = await getBalanceFunction();
+    const balanceMLC = await getBalanceFunction('mlc');
+    const balanceUSD = await getBalanceFunction('usd');
+    const balanceUSDT = await getBalanceFunction('usdt');
 
-    res.send({ status: 'success', lastIncome, lastIncomeDate, balance })
+    res.send({ status: 'success', lastIncome, lastIncomeDate, balance, balanceMLC, balanceUSD, balanceUSDT })
 }

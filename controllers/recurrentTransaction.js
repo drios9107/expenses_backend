@@ -5,7 +5,7 @@ const { extendMoment } = require('moment-range');
 const momentRange = extendMoment(moment);
 const recurrentTransactionModel = require("../models/recurrentTransaction")
 const transactionsModel = require("../models/transaction");
-const { exportedBalanceFunction } = require("./functions");
+const { getBalanceFunction } = require("../utils/common");
 
 exports.getAll = async (req, res) => {
     try {
@@ -141,6 +141,10 @@ exports.runRecurrence = async (req, res) => {
         }
     }
 
-    const balance = await exportedBalanceFunction();
-    res.send({ status: 'success', balance })
+    const balance = await getBalanceFunction();
+    const balanceMLC = await getBalanceFunction('mlc');
+    const balanceUSD = await getBalanceFunction('usd');
+    const balanceUSDT = await getBalanceFunction('usdt');
+
+    res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
 }
