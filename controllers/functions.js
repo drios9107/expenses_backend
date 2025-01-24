@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
-const { getCurrentMonthTransactions, getBalanceFunction } = require("../utils/common")
+const { getCurrentMonthTransactions, getBalanceFunction, getCurrentMonthIncomeTransactions } = require("../utils/common")
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -12,11 +12,13 @@ exports.getDashboard = async (req, res) => {
 
         const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear);
         let monthExpenses = 0;
+        let monthIncome = 0;
 
         if (currentMonthTransactions?.length === 0) {
             return res.json({
                 status: 'success',
                 monthExpenses: 0,
+                monthIncome: 0,
                 categoryData: { labels: [], values: [] },
                 subCategoryData: { labels: [], values: [] }
             })
@@ -41,13 +43,26 @@ exports.getDashboard = async (req, res) => {
             })
         }, Promise.resolve([]))
 
-
         const categoryData = { labels: Object.keys(result.category), values: Object.values(result.category) };
         const subCategoryData = { labels: Object.keys(result.subCategory)?.slice(0, 10), values: Object.values(result.subCategory)?.slice(0, 10) };
+
+        const incomeTransactions = await getCurrentMonthIncomeTransactions(currentMonth, currentYear);
+        if (currentMonthTransactions?.length === 0) {
+            return res.json({
+                status: 'success',
+                monthExpenses,
+                monthIncome: 0,
+                categoryData,
+                subCategoryData
+            })
+        }
+
+        incomeTransactions.forEach(i => monthIncome += i?.amount);
 
         res.json({
             status: 'success',
             monthExpenses: parseFloat(monthExpenses).toFixed(2),
+            monthIncome: parseFloat(monthIncome).toFixed(2),
             categoryData,
             subCategoryData
         })
