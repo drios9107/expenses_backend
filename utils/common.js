@@ -4,7 +4,7 @@ const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
 
-exports.getBalanceFunction = async (type = 'cup') => {
+const getTransactionsTotal = async (type, isExpense) => {
     const groupBy = {
         $group: {
             _id: null,
@@ -13,28 +13,21 @@ exports.getBalanceFunction = async (type = 'cup') => {
             }
         }
     }
-
-    const expenseResponse = await transactionsModel.aggregate([
+    const response = await transactionsModel.aggregate([
         {
             $match: {
                 type,
-                isExpense: true
+                isExpense
             }
         },
         { ...groupBy }
     ])
+    return response[0]?.total ?? 0;
+}
 
-    const incomeResponse = await transactionsModel.aggregate([
-        {
-            $match: {
-                type,
-                isExpense: false
-            }
-        },
-        { ...groupBy }
-    ])
-    const income = incomeResponse[0]?.total ?? 0;
-    const expense = expenseResponse[0]?.total ?? 0;
+exports.getBalanceFunction = async (type = 'cup') => {
+    const income = await getTransactionsTotal(type, false)
+    const expense = await getTransactionsTotal(type, true);
 
     return parseFloat(income - expense).toFixed(2);
 }

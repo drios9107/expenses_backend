@@ -11,14 +11,15 @@ exports.getDashboard = async (req, res) => {
             res.status(400).json({ status: 'error', message: 'Missing params' })
 
         const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear);
-        let monthExpenses = 0;
-        let monthIncome = 0;
+        let monthExpenses = 0, monthIncome = 0, biggestIncome = 0, biggestIncomeDate = null;
 
         if (currentMonthTransactions?.length === 0) {
             return res.json({
                 status: 'success',
                 monthExpenses: 0,
                 monthIncome: 0,
+                biggestIncome,
+                biggestIncomeDate,
                 categoryData: { labels: [], values: [] },
                 subCategoryData: { labels: [], values: [] }
             })
@@ -46,23 +47,29 @@ exports.getDashboard = async (req, res) => {
         const categoryData = { labels: Object.keys(result.category), values: Object.values(result.category) };
         const subCategoryData = { labels: Object.keys(result.subCategory)?.slice(0, 10), values: Object.values(result.subCategory)?.slice(0, 10) };
 
-        const incomeTransactions = await getCurrentMonthIncomeTransactions(currentMonth, currentYear);
+        incomeTransactions = await getCurrentMonthIncomeTransactions(currentMonth, currentYear);
         if (currentMonthTransactions?.length === 0) {
             return res.json({
                 status: 'success',
                 monthExpenses,
                 monthIncome: 0,
+                biggestIncome,
+                biggestIncomeDate,
                 categoryData,
                 subCategoryData
             })
         }
 
+        biggestIncome = incomeTransactions?.[0]?.amount ?? 0;
+        biggestIncomeDate = incomeTransactions?.[0]?.date;
         incomeTransactions.forEach(i => monthIncome += i?.amount);
 
         res.json({
             status: 'success',
             monthExpenses: parseFloat(monthExpenses).toFixed(2),
             monthIncome: parseFloat(monthIncome).toFixed(2),
+            biggestIncome,
+            biggestIncomeDate,
             categoryData,
             subCategoryData
         })
@@ -78,13 +85,11 @@ exports.getBalance = async (req, res) => {
         res.status(500)
         res.json(transactionsResponse)
     }
-    const lastIncome = parseFloat(transactionsResponse?.[0]?.amount ?? 0).toFixed(2);
-    const lastIncomeDate = transactionsResponse?.[0]?.date;
 
     const balance = await getBalanceFunction();
     const balanceMLC = await getBalanceFunction('mlc');
     const balanceUSD = await getBalanceFunction('usd');
     const balanceUSDT = await getBalanceFunction('usdt');
 
-    res.send({ status: 'success', lastIncome, lastIncomeDate, balance, balanceMLC, balanceUSD, balanceUSDT })
+    res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
 }
