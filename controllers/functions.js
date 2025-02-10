@@ -1,3 +1,4 @@
+const moment = require('moment')
 const dbFunctions = require("../utils/mongooseDbFunctions")
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
@@ -21,7 +22,8 @@ exports.getDashboard = async (req, res) => {
                 biggestIncome,
                 biggestIncomeDate,
                 categoryData: { labels: [], values: [] },
-                subCategoryData: { labels: [], values: [] }
+                subCategoryData: { labels: [], values: [] },
+                days: {}
             })
         }
 
@@ -37,8 +39,18 @@ exports.getDashboard = async (req, res) => {
             const stacked = await acc;
             const stackedCategory = stacked?.category;
             const stackedSubCategory = stacked?.subCategory;
+            const stackedDays = stacked?.days;
+            const dayName = moment(item?.date).format('YYYY-MM-DD');
+            const dayValue = {
+                category: categoryName,
+                subCategory: subCategoryName,
+                amount: item?.amount ?? 0,
+                description: item?.description
+            }
             monthExpenses += item.amount;
+
             return ({
+                days: { ...stackedDays, [dayName]: [...(stacked?.days?.[dayName] ?? []), dayValue] },
                 category: { ...stackedCategory, [categoryName]: (stacked?.category?.[categoryName] ?? 0) + item.amount },
                 subCategory: { ...stackedSubCategory, [subCategoryName]: (stacked?.subCategory?.[subCategoryName] ?? 0) + item.amount }
             })
@@ -46,6 +58,8 @@ exports.getDashboard = async (req, res) => {
 
         const categoryData = { labels: Object.keys(result.category), values: Object.values(result.category) };
         const subCategoryData = { labels: Object.keys(result.subCategory)?.slice(0, 10), values: Object.values(result.subCategory)?.slice(0, 10) };
+        const days = {}
+        Object.keys(result?.days ?? {}).sort().map(i => days[i] = result?.days?.[i] ?? []);
 
         incomeTransactions = await getCurrentMonthIncomeTransactions(currentMonth, currentYear);
         if (currentMonthTransactions?.length === 0) {
@@ -56,7 +70,8 @@ exports.getDashboard = async (req, res) => {
                 biggestIncome,
                 biggestIncomeDate,
                 categoryData,
-                subCategoryData
+                subCategoryData,
+                days
             })
         }
 
@@ -71,7 +86,8 @@ exports.getDashboard = async (req, res) => {
             biggestIncome,
             biggestIncomeDate,
             categoryData,
-            subCategoryData
+            subCategoryData,
+            days
         })
     } catch (err) {
         res.status(500)
