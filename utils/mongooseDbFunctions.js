@@ -15,6 +15,11 @@ exports.insertOne = (model, data) => model.create(data)
         throw new Error(error)
     })
 
+exports.insertMany = (model, data) => model.insertMany(data)
+    .catch(error => {
+        throw new Error(error)
+    })
+
 exports.deleteOne = (model, id) => model
     // .findByIdAndDelete(id)
     .deleteOne({ _id: id })

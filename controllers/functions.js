@@ -3,6 +3,9 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
+const defaultCategories = require("../utils/default/categories.json")
+const defaultSubCategories = require("../utils/default/subCategories.json")
+
 const { getCurrentMonthTransactions, getBalanceFunction, getCurrentMonthIncomeTransactions } = require("../utils/common")
 
 exports.getDashboard = async (req, res) => {
@@ -108,4 +111,35 @@ exports.getBalance = async (req, res) => {
     const balanceUSDT = await getBalanceFunction('usdt');
 
     res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
+}
+
+exports.checkCategoriesExists = async () => {
+    const categories = await dbFunctions.find(categoriesModel)
+    const existingCategoryNames = categories.map(i => i.name)
+    if (categories) {
+        const missingCategories = defaultCategories.filter(i => !existingCategoryNames.includes(i?.name))
+        console.log('***missingCategories:', missingCategories.length)
+        if (missingCategories?.length > 0)
+            await dbFunctions.insertMany(categoriesModel, missingCategories)
+    }
+}
+
+const subCategoryExists = (categories, subCategories, item) => {
+    const categoryUid = categories.find(c => c?.name === item?.category)?._id?.toString();
+    const exists = subCategories.some(s => s.name === item.name && s.category === categoryUid)
+
+    return exists
+}
+
+exports.checkSubCategoriesExists = async () => {
+    const categories = await dbFunctions.find(categoriesModel)
+    const subCategories = await dbFunctions.find(subCategoriesModel)
+    if (categories && subCategories) {
+        const missingSubCategories = defaultSubCategories
+            .filter(i => !subCategoryExists(categories, subCategories, i))
+            .map(i => ({ ...i, category: categories.find(c => c?.name === i.category)?._id?.toString() }))
+        console.log('***missingSubCategories:', missingSubCategories?.length)
+        if (missingSubCategories?.length > 0)
+            await dbFunctions.insertMany(subCategoriesModel, missingSubCategories)
+    }
 }
