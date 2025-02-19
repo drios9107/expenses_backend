@@ -113,8 +113,7 @@ exports.getBalance = async (req, res) => {
     res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
 }
 
-exports.checkCategoriesExists = async () => {
-    const categories = await dbFunctions.find(categoriesModel)
+const checkCategoriesExists = async (categories) => {
     const existingCategoryNames = categories.map(i => i.name)
     if (categories) {
         const missingCategories = defaultCategories.filter(i => !existingCategoryNames.includes(i?.name))
@@ -131,9 +130,7 @@ const subCategoryExists = (categories, subCategories, item) => {
     return exists
 }
 
-exports.checkSubCategoriesExists = async () => {
-    const categories = await dbFunctions.find(categoriesModel)
-    const subCategories = await dbFunctions.find(subCategoriesModel)
+const checkSubCategoriesExists = async (categories, subCategories) => {
     if (categories && subCategories) {
         const missingSubCategories = defaultSubCategories
             .filter(i => !subCategoryExists(categories, subCategories, i))
@@ -141,5 +138,16 @@ exports.checkSubCategoriesExists = async () => {
         console.log('***missingSubCategories:', missingSubCategories?.length)
         if (missingSubCategories?.length > 0)
             await dbFunctions.insertMany(subCategoriesModel, missingSubCategories)
+    }
+}
+
+exports.callFirstRun = async () => {
+    let categories = await dbFunctions.find(categoriesModel)
+    if (categories) {
+        checkCategoriesExists(categories);
+        categories = await dbFunctions.find(categoriesModel);
+        const subCategories = await dbFunctions.find(subCategoriesModel)
+        if (categories && subCategories)
+            checkSubCategoriesExists(categories, subCategories);
     }
 }

@@ -1,0 +1,313 @@
+[{
+        "name": "Agua",
+        "category": "Comida"
+    },
+    {
+        "name": "Leche",
+        "category": "Comida"
+    },
+    {
+        "name": "Pan",
+        "category": "Comida"
+    },
+    {
+        "name": "Pollo",
+        "category": "Comida"
+    },
+    {
+        "name": "Carne de Cerdo",
+        "category": "Comida"
+    },
+    {
+        "name": "Confituras",
+        "category": "Comida"
+    },
+    {
+        "name": "Especias",
+        "category": "Comida"
+    },
+    {
+        "name": "Viandas",
+        "category": "Comida"
+    },
+    {
+        "name": "Ensalada",
+        "category": "Comida"
+    },
+    {
+        "name": "Electricidad",
+        "category": "Impuestos"
+    },
+    {
+        "name": "Acueducto y Alcantarillado",
+        "category": "Impuestos"
+    },
+    {
+        "name": "Teléfono",
+        "category": "Impuestos"
+    },
+    {
+        "name": "Parqueo",
+        "category": "Transporte"
+    },
+    {
+        "name": "Coche",
+        "category": "Transporte"
+    },
+    {
+        "name": "Oportunidades",
+        "category": "Compra Online"
+    },
+    {
+        "name": "TuEnvio",
+        "category": "Compra Online"
+    },
+    {
+        "name": "Yadi",
+        "category": "Otros"
+    },
+    {
+        "name": "David",
+        "category": "Otros"
+    },
+    {
+        "name": "Ashley",
+        "category": "Otros"
+    },
+    {
+        "name": "Josesito",
+        "category": "Otros"
+    },
+    {
+        "name": "Préstamos",
+        "category": "Otros"
+    },
+    {
+        "name": "Café",
+        "category": "Comida"
+    },
+    {
+        "name": "Casa",
+        "category": "Otros"
+    },
+    {
+        "name": "Aceite",
+        "category": "Comida"
+    },
+    {
+        "name": "Salario Yadi",
+        "category": "Ingresos"
+    },
+    {
+        "name": "Pizza y Espaguetti",
+        "category": "Comida"
+    },
+    {
+        "name": "Pizza",
+        "category": "Comida"
+    },
+    {
+        "name": "Pañales",
+        "category": "Otros"
+    },
+    {
+        "name": "Bicicleta",
+        "category": "Transporte"
+    },
+    {
+        "name": "Medicina",
+        "category": "Otros"
+    },
+    {
+        "name": "Frutas",
+        "category": "Comida"
+    },
+    {
+        "name": "Transferencia",
+        "category": "Otros"
+    },
+    {
+        "name": "Módulo",
+        "category": "Otros"
+    },
+    {
+        "name": "Camarones",
+        "category": "Comida"
+    },
+    {
+        "name": "Frijol Colorado",
+        "category": "Comida"
+    },
+    {
+        "name": "Frijol Negro",
+        "category": "Comida"
+    },
+    {
+        "name": "Aceite",
+        "category": "Mandados"
+    },
+    {
+        "name": "Arroz",
+        "category": "Mandados"
+    },
+    {
+        "name": "Azúcar",
+        "category": "Mandados"
+    },
+    {
+        "name": "Granos",
+        "category": "Mandados"
+    },
+    {
+        "name": "Sal",
+        "category": "Mandados"
+    },
+    {
+        "name": "Compota",
+        "category": "Mandados"
+    },
+    {
+        "name": "Cigarros",
+        "category": "Mandados"
+    },
+    {
+        "name": "Aseo",
+        "category": "Mandados"
+    },
+    {
+        "name": "Café",
+        "category": "Mandados"
+    },
+    {
+        "name": "Huevos",
+        "category": "Comida"
+    },
+    {
+        "name": "Leche en Polvo",
+        "category": "Comida"
+    },
+    {
+        "name": "Pérdida",
+        "category": "Otros"
+    },
+    {
+        "name": "Puré",
+        "category": "Comida"
+    },
+    {
+        "name": "Merienda",
+        "category": "Comida"
+    },
+    {
+        "name": "Refrescos",
+        "category": "Comida"
+    },
+    {
+        "name": "Restaurant",
+        "category": "Comida"
+    },
+    {
+        "name": "David",
+        "category": "Ropa"
+    },
+    {
+        "name": "Yadi",
+        "category": "Ropa"
+    },
+    {
+        "name": "Ashley",
+        "category": "Ropa"
+    },
+    {
+        "name": "Josesito",
+        "category": "Ropa"
+    },
+    {
+        "name": "Regalo",
+        "category": "Otros"
+    },
+    {
+        "name": "Yogurt",
+        "category": "Comida"
+    },
+    {
+        "name": "USDT",
+        "category": "Ingresos"
+    },
+    {
+        "name": "USD",
+        "category": "Ingresos"
+    },
+    {
+        "name": "MLC",
+        "category": "Ingresos"
+    },
+    {
+        "name": "Regalo",
+        "category": "Ingresos"
+    },
+    {
+        "name": "Ventas",
+        "category": "Ingresos"
+    },
+    {
+        "name": "Préstamos",
+        "category": "Ingresos"
+    },
+    {
+        "name": "Devolución de Préstamos",
+        "category": "Ingresos"
+    },
+    {
+        "name": "Ramen",
+        "category": "Comida"
+    },
+    {
+        "name": "Compra MLC",
+        "category": "Otros"
+    },
+    {
+        "name": "Compra USD",
+        "category": "Otros"
+    },
+    {
+        "name": "Venta MLC",
+        "category": "Otros"
+    },
+    {
+        "name": "Venta USD",
+        "category": "Otros"
+    },
+    {
+        "name": "Fósforos",
+        "category": "Mandados"
+    },
+    {
+        "name": "Papel Sanitario",
+        "category": "Otros"
+    },
+    {
+        "name": "Devolución de Préstamos",
+        "category": "Otros"
+    },
+    {
+        "name": "Desconocido",
+        "category": "Ingresos"
+    },
+    {
+        "name": "Miel",
+        "category": "Comida"
+    },
+    {
+        "name": "Arroz",
+        "category": "Comida"
+    },
+    {
+        "name": "Cuenta Nauta",
+        "category": "Datos/Nauta Etecsa"
+    },
+    {
+        "name": "Paquete de Datos",
+        "category": "Datos/Nauta Etecsa"
+    }
+]
