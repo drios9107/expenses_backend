@@ -3,6 +3,7 @@ const dbFunctions = require("./mongooseDbFunctions")
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
+const jwt = require('jsonwebtoken')
 
 const getTransactionsTotal = async (type, isExpense) => {
     const groupBy = {
@@ -78,4 +79,8 @@ exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options 
     }
 
     return currentMonthTransactions;
+}
+
+exports.generateAccessToken = (params) => {
+    return jwt.sign(params, process.env.JWT_SECRET, { expiresIn: '24h' });
 }
