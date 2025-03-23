@@ -37,7 +37,7 @@ exports.getDashboard = async (req, res) => {
             const subCategory = item?.subCategory ?
                 await dbFunctions.findOne(subCategoriesModel, item.subCategory) :
                 { name: categoryName };
-            const subCategoryName = `${subCategory?.name}`;
+            const subCategoryName = `${subCategory?.name}:${categoryName}`;
 
             const stacked = await acc;
             const stackedCategory = stacked?.category;

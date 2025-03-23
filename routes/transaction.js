@@ -15,6 +15,8 @@ router
     .post(transactionController.create)
     .get(transactionController.getAll)
 
+router.get('/by-category-in-period/:categoryName/:currentMonth/:currentYear', transactionController.getTransactionsByCategory)
+router.get('/by-category-and-subcategory-in-period/:categoryName/:subCategoryName/:currentMonth/:currentYear', transactionController.getTransactionsByCategoryAndSubCategory)
 
 
 module.exports = router

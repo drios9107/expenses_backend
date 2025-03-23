@@ -54,15 +54,25 @@ exports.getCurrentMonthIncomeTransactions = async (currentMonth, currentYear) =>
     return currentMonthTransactions;
 }
 
-exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options = { showAll: false, replaceFields: false }) => {
+exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options = { sort: null, showAll: false, replaceFields: false, categoryId: null, subCategoryId: null }) => {
     const search = currentMonthSearch(currentMonth, currentYear);
 
+    let sort = { amount: -1 };
     if (!options?.showAll) {
         search['isExpense'] = true
         search['type'] = 'cup'
     }
 
-    const currentMonthTransactions = await dbFunctions.find(transactionsModel, search, { amount: -1 });
+    if (options?.categoryId)
+        search['category'] = options.categoryId
+
+    if (options?.subCategoryId)
+        search['subCategory'] = options.subCategoryId
+
+    if (options?.sort)
+        sort = options.sort;
+
+    const currentMonthTransactions = await dbFunctions.find(transactionsModel, search, sort);
     const categories = await dbFunctions.find(categoriesModel);
     const subCategories = await dbFunctions.find(subCategoriesModel);
 
