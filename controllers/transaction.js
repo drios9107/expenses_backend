@@ -21,8 +21,7 @@ exports.getTransactionsByCategory = async (req, res) => {
             data: currentMonthTransactions
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
@@ -48,8 +47,7 @@ exports.getTransactionsByCategoryAndSubCategory = async (req, res) => {
             data: currentMonthTransactions
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
@@ -64,8 +62,7 @@ exports.getCurrentMonth = async (req, res) => {
             data: items
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
@@ -78,64 +75,71 @@ exports.getAll = async (req, res) => {
             data: items
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
 exports.getDetails = async (req, res) => {
     try {
         const response = await dbFunctions.findOne(model, req?.params?.id)
-        if (response?.status === 'error') {
-            return res.status(500)
-            return res.json(response)
-        }
+        if (response?.status === 'error')
+            return res.status(500).json(response)
 
         return res.json({
             status: 'success',
             data: response
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
 exports.create = async (req, res) => {
     try {
-        const response = await dbFunctions.insertOne(model, req?.body)
-        if (response?.status === 'error') {
-            return res.status(500)
-            return res.json(response)
+        const body = { ...req?.body }
+        if (req?.body?.newCategory?._id) {
+            const categoryResponse = await dbFunctions.insertOne(categories, req?.body?.newCategory)
+            if (categoryResponse?.status === 'error')
+                res.status(500).json(response)
+            else
+                body.category = categoryResponse?._id
         }
+
+        if (req?.body?.newSubCategory?._id) {
+            const subCategoryResponse = await dbFunctions.insertOne(subCategories, { ...req?.body?.newSubCategory, category: req?.body?.newCategory?._id })
+            if (subCategoryResponse?.status === 'error')
+                res.status(500).json(response)
+            else
+                body.subCategory = subCategoryResponse?._id
+        }
+
+        const response = await dbFunctions.insertOne(model, body)
+        if (response?.status === 'error')
+            return res.status(500).res.json(response)
 
         return res.json({
             status: 'success',
             data: await dbFunctions.findOne(model, response._id)
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
 exports.delete = async (req, res) => {
     try {
-        const transactionData = await dbFunctions.findOne(model, req?.params?.id)
+        // const transactionData = await dbFunctions.findOne(model, req?.params?.id)
         const response = await dbFunctions.deleteOne(model, req?.params?.id)
 
-        if (response?.status === 'error') {
-            return res.status(500)
-            return res.json(response)
-        }
+        if (response?.status === 'error')
+            return res.status(500).json(response)
 
         return res.json({
             status: 'success',
             id: req?.params?.id
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
@@ -143,17 +147,14 @@ exports.update = async (req, res) => {
     try {
         const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
 
-        if (response?.status === 'error') {
-            return res.status(500)
-            return res.json(response)
-        }
+        if (response?.status === 'error')
+            return res.status(500).json(response)
 
         return res.json({
             status: 'success',
             data: await dbFunctions.findOne(model, req?.params?.id)
         })
     } catch (err) {
-        return res.status(500)
-        return res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
