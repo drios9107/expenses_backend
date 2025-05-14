@@ -2,6 +2,7 @@ exports.find = (model, search = {}, sort = {}) => {
     return model.find(search).sort(sort)
         .catch(error => {
             throw new Error(error)
+            // throw { ...(new Error("message")), code: 'default' }
         })
 }
 

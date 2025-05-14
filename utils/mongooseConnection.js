@@ -1,9 +1,7 @@
 const mongoose = require('mongoose');
 const { callFirstRun } = require('../controllers/functions');
-// Replace the placeholder with your Atlas connection string
-console.log('***starting connection')
-const url = "mongodb://127.0.0.1:27017/?directConnection=true";
-mongoose.connect(url, { dbName: 'expensesDB' })
+console.log('***starting connection');
+mongoose.connect(process.env.MONGO_DB_URL, { dbName: 'expensesDB' })
     .then(resp => {
         console.log('***connected through mongoose')
         callFirstRun()
