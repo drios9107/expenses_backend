@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken')
 
 exports.verifyToken = async (req, res, next) => {
     try {
+        console.log('***path', req?.path)
         if (['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken'].includes(req.path))
             return next();
         else {

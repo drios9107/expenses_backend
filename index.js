@@ -36,6 +36,12 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(verifyToken);
 
+// Block direct access to root URL
+app.get('/', (req, res) => {
+    console.log('Accessing root URL');
+    res.status(404).json({ error: 'Not Found' }); // or 403 Forbidden
+});
+
 app.use('/auth', authRouter)
 app.use('/categories', categoryRouter)
 app.use('/subCategories', subCategoryRouter)
