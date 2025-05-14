@@ -47,4 +47,4 @@ app.use('/balance', balanceRouter)
 
 app.listen(3001)
 
-// f1.logCurrentTimestamp()
+module.exports = app; 
