@@ -145,7 +145,24 @@ exports.delete = async (req, res) => {
 
 exports.update = async (req, res) => {
     try {
-        const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
+        const body = { ...req?.body }
+        if (req?.body?.newCategory?._id) {
+            const categoryResponse = await dbFunctions.insertOne(categories, req?.body?.newCategory)
+            if (categoryResponse?.status === 'error')
+                res.status(500).json(response)
+            else
+                body.category = categoryResponse?._id
+        }
+
+        if (req?.body?.newSubCategory?._id) {
+            const subCategoryResponse = await dbFunctions.insertOne(subCategories, { ...req?.body?.newSubCategory, category: req?.body?.newCategory?._id })
+            if (subCategoryResponse?.status === 'error')
+                res.status(500).json(response)
+            else
+                body.subCategory = subCategoryResponse?._id
+        }
+
+        const response = await dbFunctions.updateOne(model, req?.params?.id, body)
 
         if (response?.status === 'error')
             return res.status(500).json(response)
