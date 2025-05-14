@@ -1,6 +1,6 @@
 const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/subCategory")
-
+const categoryModel = require("../models/category")
 
 exports.getAll = async (req, res) => {
     try {
@@ -36,11 +36,18 @@ exports.getDetails = async (req, res) => {
 
 exports.create = async (req, res) => {
     try {
-        const response = await dbFunctions.insertOne(model, req?.body)
-        if (response?.status === 'error') {
-            res.status(500)
-            res.json(response)
+        const body = { ...req?.body }
+        if (req?.body?.newCategory?._id) {
+            const categoryResponse = await dbFunctions.insertOne(categoryModel, req?.body?.newCategory)
+            if (categoryResponse?.status === 'error')
+                res.status(500).json(response)
+            else
+                body.category = categoryResponse?._id
         }
+
+        const response = await dbFunctions.insertOne(model, body)
+        if (response?.status === 'error')
+            res.status(500).json(response)
 
         res.json({
             status: 'success',
