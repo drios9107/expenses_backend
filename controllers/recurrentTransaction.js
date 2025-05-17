@@ -6,18 +6,18 @@ const momentRange = extendMoment(moment);
 const recurrentTransactionModel = require("../models/recurrentTransaction")
 const transactionsModel = require("../models/transaction");
 const { getBalanceFunction } = require("../utils/common");
+const handleCategories = require("../utils/categoryHandlers");
 
 exports.getAll = async (req, res) => {
     try {
         const items = await dbFunctions.find(model)
 
-        res.json({
+        return res.json({
             status: 'success',
             data: items
         })
     } catch (err) {
-        res.status(500)
-        res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
@@ -25,75 +25,59 @@ exports.getDetails = async (req, res) => {
     try {
         const response = await dbFunctions.findOne(model, req?.params?.id)
         if (response?.status === 'error') {
-            res.status(500)
-            res.json(response)
+            return res.status(500).json(response)
         }
 
-        res.json({
+        return res.json({
             status: 'success',
             data: response
         })
     } catch (err) {
-        res.status(500)
-        res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
-exports.create = async (req, res) => {
+exports.create = [handleCategories, async (req, res) => {
     try {
         const recurrentTransactionResponse = await dbFunctions.insertOne(model, req.body);
         if (recurrentTransactionResponse?.status === 'error') {
-            res.status(500)
-            res.json(recurrentTransactionResponse)
+            return res.status(500).json(recurrentTransactionResponse)
         }
 
-        res.json({
-            status: 'success',
-            data: await dbFunctions.findOne(model, recurrentTransactionResponse._id)
-        })
+        return sendCreateUpdateSuccessResponse(res, model, response?._id);
     } catch (err) {
-        res.status(500)
-        res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
-}
+}]
 
 exports.delete = async (req, res) => {
     try {
         const response = await dbFunctions.deleteOne(model, req?.params?.id)
 
-        if (response?.status === 'error') {
-            res.status(500)
-            res.json(response)
-        }
+        if (response?.status === 'error')
+            return res.status(500).json(response)
 
-        res.json({
+        return res.json({
             status: 'success',
             id: req?.params?.id
         })
     } catch (err) {
-        res.status(500)
-        res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
-exports.update = async (req, res) => {
+exports.update = [handleCategories, async (req, res) => {
     try {
         const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
 
-        if (response?.status === 'error') {
-            res.status(500)
-            res.json(response)
-        }
+        if (response?.status === 'error')
+            return res.status(500).json(response)
 
-        res.json({
-            status: 'success',
-            data: await dbFunctions.findOne(model, req?.params?.id)
-        })
+        return sendCreateUpdateSuccessResponse(res, model, response?._id);
     } catch (err) {
-        res.status(500)
-        res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
-}
+}]
 
 /**
  * 
@@ -114,8 +98,7 @@ const handleTransaction = async (d, i) => {
 exports.runRecurrence = async (req, res) => {
     const recurrentTransactions = await dbFunctions.find(recurrentTransactionModel, { isActive: true });
     if (recurrentTransactions?.status === 'error') {
-        res.status(500)
-        res.json(recurrentTransactions)
+        return res.status(500).json(recurrentTransactions)
     }
 
     for (const i of recurrentTransactions) {
@@ -146,5 +129,5 @@ exports.runRecurrence = async (req, res) => {
     const balanceUSD = await getBalanceFunction('usd');
     const balanceUSDT = await getBalanceFunction('usdt');
 
-    res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
+    return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
 }

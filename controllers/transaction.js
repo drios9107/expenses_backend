@@ -2,8 +2,9 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/transaction");
 const categories = require("../models/category");
 const subCategories = require("../models/subCategory");
-const { getCurrentMonthTransactions } = require("../utils/common");
+const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse } = require("../utils/common");
 const moment = require('moment')
+const handleCategories = require("../utils/categoryHandlers");
 
 exports.getTransactionsByCategory = async (req, res) => {
     try {
@@ -94,37 +95,17 @@ exports.getDetails = async (req, res) => {
     }
 }
 
-exports.create = async (req, res) => {
+exports.create = [handleCategories, async (req, res) => {
     try {
-        const body = { ...req?.body }
-        if (req?.body?.newCategory?._id) {
-            const categoryResponse = await dbFunctions.insertOne(categories, req?.body?.newCategory)
-            if (categoryResponse?.status === 'error')
-                res.status(500).json(response)
-            else
-                body.category = categoryResponse?._id
-        }
-
-        if (req?.body?.newSubCategory?._id) {
-            const subCategoryResponse = await dbFunctions.insertOne(subCategories, { ...req?.body?.newSubCategory, category: req?.body?.newCategory?._id })
-            if (subCategoryResponse?.status === 'error')
-                res.status(500).json(response)
-            else
-                body.subCategory = subCategoryResponse?._id
-        }
-
-        const response = await dbFunctions.insertOne(model, body)
+        const response = await dbFunctions.insertOne(model, req?.body)
         if (response?.status === 'error')
             return res.status(500).res.json(response)
 
-        return res.json({
-            status: 'success',
-            data: await dbFunctions.findOne(model, response._id)
-        })
+        return sendCreateUpdateSuccessResponse(res, model, response?._id)
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
-}
+}]
 
 exports.delete = async (req, res) => {
     try {
@@ -143,35 +124,15 @@ exports.delete = async (req, res) => {
     }
 }
 
-exports.update = async (req, res) => {
+exports.update = [handleCategories, async (req, res) => {
     try {
-        const body = { ...req?.body }
-        if (req?.body?.newCategory?._id) {
-            const categoryResponse = await dbFunctions.insertOne(categories, req?.body?.newCategory)
-            if (categoryResponse?.status === 'error')
-                res.status(500).json(response)
-            else
-                body.category = categoryResponse?._id
-        }
-
-        if (req?.body?.newSubCategory?._id) {
-            const subCategoryResponse = await dbFunctions.insertOne(subCategories, { ...req?.body?.newSubCategory, category: req?.body?.newCategory?._id })
-            if (subCategoryResponse?.status === 'error')
-                res.status(500).json(response)
-            else
-                body.subCategory = subCategoryResponse?._id
-        }
-
-        const response = await dbFunctions.updateOne(model, req?.params?.id, body)
+        const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
 
         if (response?.status === 'error')
             return res.status(500).json(response)
 
-        return res.json({
-            status: 'success',
-            data: await dbFunctions.findOne(model, req?.params?.id)
-        })
+        return sendCreateUpdateSuccessResponse(res, model, response?._id)
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
-}
+}]
