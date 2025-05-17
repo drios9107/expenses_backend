@@ -82,7 +82,7 @@ exports.getDashboard = async (req, res) => {
         biggestIncomeDate = incomeTransactions?.[0]?.date;
         incomeTransactions.forEach(i => monthIncome += i?.amount);
 
-        res.json({
+        return res.json({
             status: 'success',
             monthExpenses: parseFloat(monthExpenses).toFixed(2),
             monthIncome: parseFloat(monthIncome).toFixed(2),
@@ -93,24 +93,21 @@ exports.getDashboard = async (req, res) => {
             days
         })
     } catch (err) {
-        res.status(500)
-        res.json({ status: 'error', message: err.message })
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
 
 exports.getBalance = async (req, res) => {
     const transactionsResponse = await dbFunctions.find(transactionsModel, { isExpense: false, type: 'cup' }, { date: -1 });
-    if (transactionsResponse?.status === 'error') {
-        res.status(500)
-        res.json(transactionsResponse)
-    }
+    if (transactionsResponse?.status === 'error')
+        return res.status(500).json(transactionsResponse)
 
     const balance = await getBalanceFunction();
     const balanceMLC = await getBalanceFunction('mlc');
     const balanceUSD = await getBalanceFunction('usd');
     const balanceUSDT = await getBalanceFunction('usdt');
 
-    res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
+    return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
 }
 
 const checkCategoriesExists = async (categories) => {

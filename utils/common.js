@@ -94,3 +94,8 @@ exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options 
 exports.generateAccessToken = (params) => {
     return jwt.sign(params, process.env.JWT_SECRET, { expiresIn: '24h' });
 }
+
+exports.sendCreateUpdateSuccessResponse = async (res, model, id) => {
+    const data = await dbFunctions.findOne(model, id);
+    return res.status(200).json({ status: 'success', data });
+};
