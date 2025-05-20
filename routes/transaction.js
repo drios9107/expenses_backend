@@ -3,6 +3,7 @@ const transactionController = require('../controllers/transaction')
 const router = express.Router()
 
 router.get('/currentMonth', transactionController.getCurrentMonth)
+router.post('/search', transactionController.search)
 
 router
     .route('/:id')

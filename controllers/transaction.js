@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/transaction");
 const categories = require("../models/category");
 const subCategories = require("../models/subCategory");
-const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse } = require("../utils/common");
+const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm } = require("../utils/common");
 const moment = require('moment')
 const handleCategories = require("../utils/categoryHandlers");
 
@@ -61,6 +61,40 @@ exports.getCurrentMonth = async (req, res) => {
         return res.json({
             status: 'success',
             data: items
+        })
+    } catch (err) {
+        return res.status(500).json({ status: 'error', message: err.message })
+    }
+}
+
+exports.search = async (req, res) => {
+    try {
+        const search = {}
+
+        const searchTerm = req?.body?.searchTerm;
+        const limit = req?.body?.limit ?? 50;
+        const sort = req?.body?.sort ?? { date: -1 };
+        const lastDate = req?.body?.lastDate;
+
+        if (searchTerm) {
+            let or = [{ amount: searchTerm }, { type: searchTerm }]
+
+            if (searchTerm.toString().split('-').length === 3)
+                search.$or = handleDateSearchTerm(searchTerm, or);
+        }
+
+        if (lastDate)
+            search.created_at = { $lte: lastDate }
+
+        const transactions = await dbFunctions.search(model, search, sort, limit);
+
+        return res.json({
+            status: 'success',
+            data: transactions,
+            total: transactions.length,
+            lastDate: transactions?.length > 0 ?
+                transactions[transactions.length - 1]?.created_at :
+                undefined
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })

@@ -99,3 +99,27 @@ exports.sendCreateUpdateSuccessResponse = async (res, model, id) => {
     const data = await dbFunctions.findOne(model, id);
     return res.status(200).json({ status: 'success', data });
 };
+
+
+/**
+ * This function handles the search term if it has this format YYYY-MM-DD, then it changes the query search in the or variable 
+ * @params searchTerm {string} 
+ * @params or {array}
+ * @returns {array}
+ */
+exports.handleDateSearchTerm = (searchTerm, or) => {
+    const year = searchTerm.split('-')[0];
+    const month = searchTerm.split('-')[1];
+    const date = searchTerm.split('-')[2];
+    if (!isNaN(year) && !isNaN(month) && !isNaN(date)) {
+        const tempDate = moment().set({ year, month: parseInt(month) - 1, date });
+        if (tempDate.isValid()) {
+            const startDate = moment(tempDate).startOf('day').valueOf();
+            const endDate = moment(tempDate).endOf('day').valueOf(); 111
+
+            return [{ date: { $gte: startDate, $lte: endDate } }]
+        }
+    }
+
+    return or
+}
