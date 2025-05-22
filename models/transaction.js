@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 // const moment = require('moment');
 // const balanceModel = require('./balance');
 
@@ -41,6 +41,14 @@ const schema = new mongoose.Schema({
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'recurrentTransaction',
         required: false
+    },
+    created_at: {
+        type: Number,
+        default: Date.now(),
+    },
+    update_at: {
+        type: Number,
+        default: Date.now(),
     }
 });
 // schema.post('save', async (data, next) => {

@@ -1,9 +1,12 @@
 const jwt = require('jsonwebtoken')
 
+const authRoutes = ['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken'];
+const testingEndpoints = [];
+
 exports.verifyToken = async (req, res, next) => {
     try {
         console.log('***path', req?.path)
-        if (['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken'].includes(req.path))
+        if ([...authRoutes, ...testingEndpoints].includes(req.path))
             return next();
         else {
             const token = req.headers["authorization"]?.split(" ")?.[1];

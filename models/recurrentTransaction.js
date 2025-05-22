@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const moment = require('moment')
 
 const schema = new mongoose.Schema({
     category: {
@@ -45,6 +44,14 @@ const schema = new mongoose.Schema({
         type: Boolean,
         required: false,
     },
+    created_at: {
+        type: Number,
+        default: Date.now(),
+    },
+    update_at: {
+        type: Number,
+        default: Date.now(),
+    }
 })
 
 module.exports = mongoose.model('recurrentTransaction', schema)

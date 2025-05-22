@@ -1,8 +1,10 @@
 const moment = require('moment')
 const dbFunctions = require("../utils/mongooseDbFunctions")
+const usersModel = require("../models/user")
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
+const recurrentTransactionsModel = require('../models/recurrentTransaction')
 const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 
@@ -146,5 +148,36 @@ exports.callFirstRun = async () => {
         const subCategories = await dbFunctions.find(subCategoriesModel)
         if (categories && subCategories)
             checkSubCategoriesExists(categories, subCategories);
+    }
+}
+
+exports.addCreatedAt = async (req, res) => {
+    try {
+        if (req?.body?.model) {
+            const model = {
+                user: usersModel,
+                transactions: transactionsModel,
+                categories: categoriesModel,
+                subCategories: subCategoriesModel,
+                recurrentTransactions: recurrentTransactionsModel
+            }[req?.body?.model];
+
+            const search = { created_at: { $exists: false } };
+            const items = await dbFunctions.find(model, search);
+            const response = []
+            for (let index = 0; index < items.length; index++) {
+                const temp = items[index];
+                const id = temp?._id?.toString();
+                const created_at = moment(temp?.date).set({ milliseconds: index + 1 }).valueOf();
+                const updateResponse = await dbFunctions.updateOne(model, id, { created_at })
+                console.log('***temp', id, created_at, updateResponse?.created_at);
+                if (updateResponse)
+                    response.push(updateResponse)
+            }
+
+            return res.send({ status: 'success', result: response })
+        }
+    } catch (err) {
+        return res.status(500).json({ status: 'error', message: err.message })
     }
 }
