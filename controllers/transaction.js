@@ -87,11 +87,12 @@ exports.search = async (req, res) => {
             search.created_at = { $lte: lastDate }
 
         const transactions = await dbFunctions.search(model, search, sort, limit);
+        const total = await dbFunctions.count(model);
 
         return res.json({
             status: 'success',
             data: transactions,
-            total: transactions.length,
+            total,
             lastDate: transactions?.length > 0 ?
                 transactions[transactions.length - 1]?.created_at :
                 undefined

@@ -1,5 +1,12 @@
 const moment = require('moment');
 
+exports.count = (model, search = {}) => {
+    return model.countDocuments(search)
+        .catch(error => {
+            throw new Error(error)
+        })
+}
+
 exports.search = (model, search = {}, sort = {}, limit = 10) => {
     return model.find(search).sort(sort).limit(limit)
         .catch(error => {
@@ -37,7 +44,12 @@ exports.deleteOne = (model, id) => model
         throw new Error(error)
     })
 
-exports.updateOne = (model, id, { _id, ...data }) => model.findByIdAndUpdate(id, { ...data, updated_at: moment().valueOf() })
+exports.updateOne = (model, id, { _id = null, ...data }) => model.findByIdAndUpdate(id, { ...data, updated_at: moment().valueOf() }, { new: true })
+    .catch(error => {
+        throw new Error(error)
+    })
+
+exports.updateMany = (model, search = {}, { _id, ...data }) => model.updateMany(search, { $set: { ...data, updated_at: moment().valueOf() } })
     .catch(error => {
         throw new Error(error)
     })
