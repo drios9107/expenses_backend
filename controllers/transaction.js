@@ -188,7 +188,6 @@ exports.search = async (req, res) => {
 
         search.$and = and;
 
-        console.log('***search', search)
         const transactions = await dbFunctions.search(model, search, sort, limit);
         const total = await dbFunctions.count(model);
 
