@@ -67,7 +67,18 @@ exports.getCurrentMonth = async (req, res) => {
     }
 }
 
-exports.search = async (req, res) => {
+/**
+ * This functions search for transactions using limit and skip (not recommended for large data sets)
+ * @param {String} searchTerm Value to search in transaction fields
+ * @param {Number} limit Amount of transactions to return
+ * @param {Number} page Page number
+ * @param {String} sortField Field to sort by
+ * @param {String} sortDirection Sort direction
+ * @param {Boolean} isExpense Search for expense or income transactions, if it's not set then it returns both
+ * @param {Boolean} isRecurrent Search for recurrent or non-recurrent transactions, if it's not set then it returns both
+ * @returns Returns a transactions array in "data" property and the total amount of transactions in "total" property
+ */
+exports.simpleSearch = async (req, res) => {
     try {
         const search = {}
 
@@ -107,7 +118,7 @@ exports.search = async (req, res) => {
 
         search.$and = and;
 
-        const transactions = await dbFunctions.search(model, search, sort, limit, page);
+        const transactions = await dbFunctions.searchWithSkip(model, search, sort, limit, page);
         const total = await dbFunctions.count(model);
 
         return res.json({
@@ -115,6 +126,82 @@ exports.search = async (req, res) => {
             data: transactions,
             length: transactions.length,
             total
+        })
+    } catch (err) {
+        return res.status(500).json({ status: 'error', message: err.message })
+    }
+}
+
+exports.search = async (req, res) => {
+    try {
+        const search = {}
+
+        const {
+            searchTerm,
+            limit = 50,
+            paginationToken = null,
+            sortField = 'created_at',
+            sortDirection = 'desc',
+            isExpense,
+            isRecurrent,
+        } = req?.body;
+
+        const sort = {
+            [sortField]: sortDirection === 'desc' ? -1 : 1,
+            created_at: sortDirection === 'desc' ? -1 : 1
+        };
+
+        const and = [];
+        if (typeof (isExpense) !== 'undefined')
+            and.push({ isExpense })
+
+        if (typeof (isRecurrent) !== 'undefined')
+            and.push({ isRecurrent })
+
+        if (searchTerm) {
+            let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
+
+            if (!isNaN(searchTerm))
+                or.push({ amount: searchTerm })
+
+            if (searchTerm.toString().split('-').length === 3)
+                or = handleDateSearchTerm(searchTerm, or);
+
+            and.push({ $or: or });
+        }
+
+        if (paginationToken) {
+            and.push({
+                $or: [
+                    {
+                        [sortField]: {
+                            [sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
+                        }
+                    },
+                    {
+                        [sortField]: paginationToken.lastSortValue,
+                        created_at: { $lt: paginationToken.lastCreatedAt }
+                    }
+                ]
+            });
+        }
+
+        search.$and = and;
+
+        console.log('***search', search)
+        const transactions = await dbFunctions.search(model, search, sort, limit);
+        const total = await dbFunctions.count(model);
+
+        const lastTransaction = transactions[transactions.length - 1];
+
+        return res.json({
+            status: 'success',
+            data: transactions,
+            total,
+            nextPageToken: {
+                lastSortValue: lastTransaction[sortField],
+                lastCreatedAt: lastTransaction.created_at
+            }
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })

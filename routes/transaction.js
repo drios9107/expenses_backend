@@ -4,6 +4,7 @@ const router = express.Router()
 
 router.get('/currentMonth', transactionController.getCurrentMonth)
 router.post('/search', transactionController.search)
+router.post('/simple-search', transactionController.simpleSearch)
 
 router
     .route('/:id')
