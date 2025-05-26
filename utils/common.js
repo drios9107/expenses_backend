@@ -5,6 +5,10 @@ const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
 const jwt = require('jsonwebtoken')
 
+exports.getIlikeSearch = (searchTerm) => {
+    return { $regex: searchTerm, $options: 'i' }
+}
+
 const getTransactionsTotal = async (type, isExpense) => {
     const groupBy = {
         $group: {

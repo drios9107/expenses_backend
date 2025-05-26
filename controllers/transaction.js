@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/transaction");
 const categories = require("../models/category");
 const subCategories = require("../models/subCategory");
-const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm } = require("../utils/common");
+const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch } = require("../utils/common");
 const moment = require('moment')
 const handleCategories = require("../utils/categoryHandlers");
 
@@ -71,31 +71,50 @@ exports.search = async (req, res) => {
     try {
         const search = {}
 
-        const searchTerm = req?.body?.searchTerm;
-        const limit = req?.body?.limit ?? 50;
-        const sort = req?.body?.sort ?? { date: -1 };
-        const lastDate = req?.body?.lastDate;
+        const {
+            searchTerm,
+            limit = 50,
+            page = 0,
+            sortField = 'created_at',
+            sortDirection = 'desc',
+            isExpense,
+            isRecurrent,
+        } = req?.body;
+
+        const sort = {
+            [sortField]: sortDirection === 'desc' ? -1 : 1,
+            created_at: sortDirection === 'desc' ? -1 : 1
+        };
+
+        const and = [];
+        if (typeof (isExpense) !== 'undefined')
+            and.push({ isExpense })
+
+        if (typeof (isRecurrent) !== 'undefined')
+            and.push({ isRecurrent })
 
         if (searchTerm) {
-            let or = [{ amount: searchTerm }, { type: searchTerm }]
+            let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
+
+            if (!isNaN(searchTerm))
+                or.push({ amount: searchTerm })
 
             if (searchTerm.toString().split('-').length === 3)
-                search.$or = handleDateSearchTerm(searchTerm, or);
+                or = handleDateSearchTerm(searchTerm, or);
+
+            and.push({ $or: or });
         }
 
-        if (lastDate)
-            search.created_at = { $lte: lastDate }
+        search.$and = and;
 
-        const transactions = await dbFunctions.search(model, search, sort, limit);
+        const transactions = await dbFunctions.search(model, search, sort, limit, page);
         const total = await dbFunctions.count(model);
 
         return res.json({
             status: 'success',
             data: transactions,
-            total,
-            lastDate: transactions?.length > 0 ?
-                transactions[transactions.length - 1]?.created_at :
-                undefined
+            length: transactions.length,
+            total
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })

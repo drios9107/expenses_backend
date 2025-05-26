@@ -7,8 +7,8 @@ exports.count = (model, search = {}) => {
         })
 }
 
-exports.search = (model, search = {}, sort = {}, limit = 10) => {
-    return model.find(search).sort(sort).limit(limit)
+exports.search = (model, search = {}, sort = {}, limit = 10, page = 0) => {
+    return model.find(search).sort(sort).limit(limit).skip(page * limit)
         .catch(error => {
             throw new Error(error)
         })
