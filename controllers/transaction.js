@@ -68,7 +68,7 @@ exports.getCurrentMonth = async (req, res) => {
 }
 
 /**
- * This functions search for transactions using limit and skip (not recommended for large data sets)
+ * This functions searches for transactions using limit and skip (not recommended for large data sets)
  * @param {String} searchTerm Value to search in transaction fields
  * @param {Number} limit Amount of transactions to return
  * @param {Number} page Page number
@@ -132,6 +132,17 @@ exports.simpleSearch = async (req, res) => {
     }
 }
 
+/**
+ * This functions searches for transactions using a pagination token
+ * @param {String} searchTerm Value to search in transaction fields
+ * @param {Number} limit Amount of transactions to return
+ * @param {Number} paginationToken This field defines in which direction and from what point the search should start. Pagination token is an object containing the following properties: direction (previous or next), firstSortField, firstCreatedAt, lastSortField and lastCreatedAt
+ * @param {String} sortField Field to sort by
+ * @param {String} sortDirection Sort direction
+ * @param {Boolean} isExpense Search for expense or income transactions, if it's not set then it returns both
+ * @param {Boolean} isRecurrent Search for recurrent or non-recurrent transactions, if it's not set then it returns both
+ * @returns Returns a transactions array in "data" property and the total amount of transactions in "total" property
+ */
 exports.search = async (req, res) => {
     try {
         const search = {}
@@ -146,9 +157,13 @@ exports.search = async (req, res) => {
             isRecurrent,
         } = req?.body;
 
+        const properDirection = paginationToken?.direction === 'previous' ?
+            (sortDirection === 'desc' ? 1 : -1) :
+            (sortDirection === 'desc' ? -1 : 1);
+
         const sort = {
-            [sortField]: sortDirection === 'desc' ? -1 : 1,
-            created_at: sortDirection === 'desc' ? -1 : 1
+            [sortField]: properDirection,
+            created_at: properDirection
         };
 
         const and = [];
@@ -172,35 +187,64 @@ exports.search = async (req, res) => {
 
         if (paginationToken) {
             and.push({
-                $or: [
-                    {
-                        [sortField]: {
-                            [sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
+                $or: paginationToken.direction === 'previous' ?
+                    [
+                        {
+                            [sortField]: {
+                                [sortDirection === 'desc' ? '$gt' : '$lt']: paginationToken.firstSortValue
+                            }
+                        },
+                        {
+                            [sortField]: paginationToken.firstSortValue,
+                            created_at: { $gt: paginationToken.firstCreatedAt }
                         }
-                    },
-                    {
-                        [sortField]: paginationToken.lastSortValue,
-                        created_at: { $lt: paginationToken.lastCreatedAt }
-                    }
-                ]
+                    ] :
+                    [
+                        {
+                            [sortField]: {
+                                [sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
+                            }
+                        },
+                        {
+                            [sortField]: paginationToken.lastSortValue,
+                            created_at: { $lt: paginationToken.lastCreatedAt }
+                        }
+                    ]
             });
         }
 
         search.$and = and;
 
-        const transactions = await dbFunctions.search(model, search, sort, limit);
+        const transactions = await dbFunctions.search(model, search, sort, limit + 1);
         const total = await dbFunctions.count(model);
 
-        const lastTransaction = transactions[transactions.length - 1];
+        let hasMore = transactions.length > limit;
+        const isFirstSearch = !paginationToken;
+        let resultTransactions = hasMore ? transactions.slice(0, -1) : transactions;
+        if (paginationToken?.direction === 'previous') {
+            resultTransactions = resultTransactions.reverse();
+            hasMore = true;
+        }
+        const amount = resultTransactions?.length;
+
+        const firstTransaction = resultTransactions[0];
+        const lastTransaction = resultTransactions[resultTransactions.length - 1];
 
         return res.json({
             status: 'success',
-            data: transactions,
+            data: resultTransactions,
             total,
-            nextPageToken: {
+            length: amount,
+            nextPageToken: hasMore ? {
                 lastSortValue: lastTransaction[sortField],
-                lastCreatedAt: lastTransaction.created_at
-            }
+                lastCreatedAt: lastTransaction.created_at,
+                direction: 'next'
+            } : null,
+            previousPageToken: !isFirstSearch ? {
+                firstSortValue: firstTransaction[sortField],
+                firstCreatedAt: firstTransaction.created_at,
+                direction: 'previous'
+            } : null
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
