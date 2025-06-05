@@ -145,7 +145,7 @@ exports.handleDateSearchTerm = (searchTerm, or) => {
  * @param {string} field - The field name to migrate (e.g., 'category').
  * @throws {Error} If the field is invalid or database operations fail. 
  */
-exports.changeTransactionsCategoryType = async (field = 'category') => {
+exports.changeTransactionsFieldType = async (field = 'category') => {
     const BATCH_SIZE = 200; // Adjust based on performance
     let processed = 0;
 
@@ -179,6 +179,57 @@ exports.changeTransactionsCategoryType = async (field = 'category') => {
                 }));
 
             const result = await transactionsModel.bulkWrite(bulkOps);
+            processed += items.length;
+            console.log(`Migrated batch: ${processed}/${total} (${result.modifiedCount} updated)`);
+        }
+
+        console.log('Migration complete!');
+    } catch (error) {
+        console.error('Migration failed:', error);
+    }
+}
+
+/**
+ * Converts all subCategory where the specified field contains a string value
+ * into a proper ObjectId reference. Used for migrating String-based IDs to ObjectIds.
+ * 
+ * @param {string} field - The field name to migrate (e.g., 'category').
+ * @throws {Error} If the field is invalid or database operations fail. 
+ */
+exports.changeSubCategoryFieldType = async (field = 'category') => {
+    const BATCH_SIZE = 200; // Adjust based on performance
+    let processed = 0;
+
+    const search = { [field]: { $type: 'string' } };
+
+    try {
+        // Count items with string-type category
+        const total = await subCategoriesModel.countDocuments(search);
+        console.log(`Found ${total} items to migrate.`);
+
+        while (processed < total) {
+            // Fetch a batch of items
+            const items = await subCategoriesModel.find(search)
+                .select(`_id ${field}`)
+                .limit(BATCH_SIZE)
+                .lean();
+
+            if (items.length === 0) break;
+
+            const bulkOps = items
+                .filter(i => i?.[field] && i?.[field] !== '')
+                .map(i => ({
+                    updateOne: {
+                        filter: { _id: i._id },
+                        update: {
+                            $set: {
+                                [field]: new mongoose.Types.ObjectId(i?.[field]) // Convert String → ObjectId
+                            }
+                        }
+                    }
+                }));
+
+            const result = await subCategoriesModel.bulkWrite(bulkOps);
             processed += items.length;
             console.log(`Migrated batch: ${processed}/${total} (${result.modifiedCount} updated)`);
         }

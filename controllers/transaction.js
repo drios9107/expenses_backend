@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/transaction");
 const categories = require("../models/category");
 const subCategories = require("../models/subCategory");
-const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch, populateCategoryAndSubCategory, changeTransactionsCategoryType } = require("../utils/common");
+const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch, populateCategoryAndSubCategory } = require("../utils/common");
 const moment = require('moment')
 const handleCategories = require("../utils/categoryHandlers");
 
