@@ -4,12 +4,14 @@ const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
     category: {
-        type: String,
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'category',
         required: true,
-        messsage: 'obligatorio'
+        messsage: 'required field'
     },
     subCategory: {
-        type: String,
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'subCategory',
         required: false,
     },
     date: {
