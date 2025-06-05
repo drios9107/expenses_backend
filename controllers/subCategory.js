@@ -1,10 +1,11 @@
 const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/subCategory")
 const handleCategories = require("../utils/categoryHandlers");
+const { populateCategory } = require("../utils/common");
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, {}, { name: 1 });
+        const items = await dbFunctions.find(model, {}, { name: 1 }, populateCategory);
 
         return res.json({
             status: 'success',
@@ -17,7 +18,7 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id)
+        const response = await dbFunctions.findOne(model, req?.params?.id, {}, populateCategory)
         if (response?.status === 'error')
             return res.status(500).json(response)
 

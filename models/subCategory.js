@@ -6,8 +6,10 @@ const schema = new mongoose.Schema({
         required: true,
     },
     category: {
-        type: String,
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'category',
         required: true,
+        messsage: 'required field'
     },
     created_at: {
         type: Number,

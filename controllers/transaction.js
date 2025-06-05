@@ -252,7 +252,7 @@ exports.search = async (req, res) => {
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model)
+        const items = await dbFunctions.find(model, {}, {}, populateCategoryAndSubCategory)
 
         return res.json({
             status: 'success',
@@ -265,7 +265,7 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id)
+        const response = await dbFunctions.findOne(model, req?.params?.id, {}, populateCategoryAndSubCategory)
         if (response?.status === 'error')
             return res.status(500).json(response)
 

@@ -6,8 +6,12 @@ const subCategoriesModel = require("../models/subCategory")
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose');
 
+const categoryPopulateSelect = { path: 'category', select: 'name _id' };
+
+exports.populateCategory = [categoryPopulateSelect];
+
 exports.populateCategoryAndSubCategory = [
-    { path: 'category', select: 'name _id' },
+    categoryPopulateSelect,
     { path: 'subCategory', select: 'name _id' },
 ]
 
