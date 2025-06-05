@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/transaction");
 const categories = require("../models/category");
 const subCategories = require("../models/subCategory");
-const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch } = require("../utils/common");
+const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch, populateCategoryAndSubCategory, changeTransactionsCategoryType } = require("../utils/common");
 const moment = require('moment')
 const handleCategories = require("../utils/categoryHandlers");
 
@@ -118,7 +118,7 @@ exports.simpleSearch = async (req, res) => {
 
         search.$and = and;
 
-        const transactions = await dbFunctions.searchWithSkip(model, search, sort, limit, page);
+        const transactions = await dbFunctions.searchWithSkip({ model, search, sort, limit, page, populate: populateCategoryAndSubCategory });
         const total = await dbFunctions.count(model);
 
         return res.json({
@@ -214,8 +214,7 @@ exports.search = async (req, res) => {
         }
 
         search.$and = and;
-
-        const transactions = await dbFunctions.search(model, search, sort, limit + 1);
+        const transactions = await dbFunctions.search({ model, search, sort, limit: limit + 1, populate: populateCategoryAndSubCategory });
         const total = await dbFunctions.count(model);
 
         let hasMore = transactions.length > limit;
