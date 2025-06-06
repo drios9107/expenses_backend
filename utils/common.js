@@ -6,12 +6,12 @@ const subCategoriesModel = require("../models/subCategory")
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose');
 
-const categoryPopulateSelect = { path: 'category', select: 'name _id' };
-
-exports.populateCategory = [categoryPopulateSelect];
+exports.populateCategory = [
+    { path: 'category', select: 'name _id' }
+];
 
 exports.populateCategoryAndSubCategory = [
-    categoryPopulateSelect,
+    this.populateCategory,
     { path: 'subCategory', select: 'name _id' },
 ]
 
@@ -86,17 +86,15 @@ exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options 
     if (options?.sort)
         sort = options.sort;
 
-    const currentMonthTransactions = await dbFunctions.find(transactionsModel, search, sort);
-    const categories = await dbFunctions.find(categoriesModel);
-    const subCategories = await dbFunctions.find(subCategoriesModel);
+    const currentMonthTransactions = await dbFunctions.find(transactionsModel, search, sort, this.populateCategoryAndSubCategory);
 
     if (options?.replaceFields) {
         return currentMonthTransactions.map((i, index) => {
             const data = { ...(i?._doc ?? i) };
             if (data?.category)
-                data.category = categories.find(c => c?._id?.toString() === data.category)?.name;
+                data.category = data?.category?.name;
             if (data?.subCategory)
-                data.subCategory = subCategories.find(sc => sc?._id?.toString() === data.subCategory)?.name;
+                data.subCategory = data?.subCategory?.name;
 
             return data;
         })
@@ -237,5 +235,35 @@ exports.changeSubCategoryFieldType = async (field = 'category') => {
         console.log('Migration complete!');
     } catch (error) {
         console.error('Migration failed:', error);
+    }
+}
+
+exports.removeUnnecessarySubcategories = async () => {
+    try {
+        const subCategories = await dbFunctions.find(subCategoriesModel);
+        const transactions = await dbFunctions.find(transactionsModel);
+        console.log(transactions?.length);
+        const subCategoriesInUse = Array.from(new Set(
+            transactions
+                ?.filter(i => {
+                    const sc = i.subCategory?.toString() ?? i?.subCategory;
+
+                    return sc && sc !== ''
+                })
+                ?.map(i => i?.subCategory?.toString() ?? i?.subCategory)
+        ));
+        const notInUseObjectIds = subCategories.filter(i => !subCategoriesInUse.includes(i._id?.toString()))?.map(i => i?._id)
+
+        const bulkOps = notInUseObjectIds
+            .map(i => ({
+                deleteOne: {
+                    filter: { _id: i._id }
+                }
+            }));
+
+        const result = await subCategoriesModel.bulkWrite(bulkOps);
+        console.log(`Deleted batch: ${result.modifiedCount} deleted`);
+    } catch (error) {
+        console.error('Deletion failed:', error);
     }
 }
