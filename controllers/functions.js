@@ -124,7 +124,7 @@ const checkCategoriesExists = async (categories) => {
 
 const subCategoryExists = (categories, subCategories, item) => {
     const categoryUid = categories.find(c => c?.name === item?.category)?._id?.toString();
-    const exists = subCategories.some(s => s.name === item.name && s.category === categoryUid)
+    const exists = subCategories.some(s => s.name === item.name && s.category?.toString() === categoryUid)
 
     return exists
 }

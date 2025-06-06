@@ -42,7 +42,9 @@ exports.getTransactionsByCategoryAndSubCategory = async (req, res) => {
         if (subCategory.length === 0)
             return res.status(404).json({ status: 'error', message: 'subCategory-not-found' })
 
-        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, { subCategoryId: subCategory[0]._id, categoryId, replaceFields: true, sort: { date: -1, amount: -1 } });
+        const subCategoryId = subCategory[0]?._id?.toString();
+
+        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, { subCategoryId, categoryId, replaceFields: true, sort: { date: -1, amount: -1 } });
         return res.json({
             status: 'success',
             data: currentMonthTransactions
