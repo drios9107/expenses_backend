@@ -100,14 +100,19 @@ exports.getDashboard = async (req, res) => {
 }
 
 exports.getBalance = async (req, res) => {
-    const [balance, balanceMLC, balanceUSD, balanceUSDT] = await Promise.all([
-        getBalanceFunction(),
-        getBalanceFunction('mlc'),
-        getBalanceFunction('usd'),
-        getBalanceFunction('usdt')
-    ])
+    try {
+        const [balance, balanceMLC, balanceUSD, balanceUSDT] = await Promise.all([
+            getBalanceFunction(),
+            getBalanceFunction('mlc'),
+            getBalanceFunction('usd'),
+            getBalanceFunction('usdt')
+        ])
 
-    return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
+        return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
+    } catch (error) {
+        console.error('getBalance error:', error);
+        return res.status(500).json({ code: error?.code, message: error?.message });
+    }
 }
 
 const checkCategoriesExists = async (categories) => {
