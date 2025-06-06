@@ -51,6 +51,12 @@ exports.deleteOne = (model, id) => model
         throw new Error(error)
     })
 
+exports.deleteMany = (model, search = {}) => model
+    .deleteMany(search)
+    .catch(error => {
+        throw new Error(error)
+    })
+
 exports.updateOne = (model, id, { _id = null, ...data }) => model.findByIdAndUpdate(id, { ...data, updated_at: moment().valueOf() }, { new: true })
     .catch(error => {
         throw new Error(error)
