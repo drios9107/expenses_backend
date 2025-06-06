@@ -33,11 +33,11 @@ exports.getDashboard = async (req, res) => {
         }
 
         const result = await currentMonthTransactions.reduce(async (acc, item) => {
-            const category = await dbFunctions.findOne(categoriesModel, item.category)
+            const category = await dbFunctions.findOne(categoriesModel, item?.category?._id)
             const categoryName = category?.name;
 
             const subCategory = item?.subCategory ?
-                await dbFunctions.findOne(subCategoriesModel, item.subCategory) :
+                await dbFunctions.findOne(subCategoriesModel, item?.subCategory?._id) :
                 { name: categoryName };
             const subCategoryName = `${subCategory?.name}:${categoryName}`;
 
@@ -100,14 +100,12 @@ exports.getDashboard = async (req, res) => {
 }
 
 exports.getBalance = async (req, res) => {
-    const transactionsResponse = await dbFunctions.find(transactionsModel, { isExpense: false, type: 'cup' }, { date: -1 });
-    if (transactionsResponse?.status === 'error')
-        return res.status(500).json(transactionsResponse)
-
-    const balance = await getBalanceFunction();
-    const balanceMLC = await getBalanceFunction('mlc');
-    const balanceUSD = await getBalanceFunction('usd');
-    const balanceUSDT = await getBalanceFunction('usdt');
+    const [balance, balanceMLC, balanceUSD, balanceUSDT] = await Promise.all([
+        getBalanceFunction(),
+        getBalanceFunction('mlc'),
+        getBalanceFunction('usd'),
+        getBalanceFunction('usdt')
+    ])
 
     return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
 }
