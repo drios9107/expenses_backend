@@ -41,10 +41,14 @@ const getTransactionsTotal = async (type, isExpense) => {
 }
 
 exports.getBalanceFunction = async (type = 'cup') => {
-    const income = await getTransactionsTotal(type, false)
-    const expense = await getTransactionsTotal(type, true);
+    try {
+        const [income, expense] = await Promise.all([getTransactionsTotal(type, false), getTransactionsTotal(type, true)]);
 
-    return parseFloat(income - expense).toFixed(2);
+        return parseFloat(income - expense).toFixed(2);
+    } catch (error) {
+        console.error('getBalance error:', error);
+        return res.status(500).json({ code: error?.code, message: error?.message });
+    }
 }
 
 const currentMonthSearch = (currentMonth, currentYear) => {
