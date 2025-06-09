@@ -96,35 +96,40 @@ const handleTransaction = async (d, i) => {
 }
 
 exports.runRecurrence = async (req, res) => {
-    const recurrentTransactions = await dbFunctions.find(recurrentTransactionModel, { isActive: true });
-    if (recurrentTransactions?.status === 'error') {
-        return res.status(500).json(recurrentTransactions)
-    }
+    try {
+        const recurrentTransactions = await dbFunctions.find(recurrentTransactionModel, { isActive: true });
+        if (recurrentTransactions?.status === 'error') {
+            return res.status(500).json(recurrentTransactions)
+        }
 
-    for (const i of recurrentTransactions) {
-        const range = momentRange.range([moment(i?.date), moment()]);
-        const days = Array.from(range.by('days'));
+        for (const i of recurrentTransactions) {
+            const range = momentRange.range([moment(i?.date), moment()]);
+            const days = Array.from(range.by('days'));
 
-        if (i.frequency === 'daily') {
-            for (const d of days) {
-                await handleTransaction(d, i);
-            }
-        } else if (i.frequency === 'twoDays') {
-            const filteredDays = days.filter((d, index) => index % 2 === 0)
-            for (const d of filteredDays) {
-                await handleTransaction(d, i);
-            }
-        } else if (i.frequency === 'daysWeek') {
+            if (i.frequency === 'daily') {
+                for (const d of days) {
+                    await handleTransaction(d, i);
+                }
+            } else if (i.frequency === 'twoDays') {
+                const filteredDays = days.filter((d, index) => index % 2 === 0)
+                for (const d of filteredDays) {
+                    await handleTransaction(d, i);
+                }
+            } else if (i.frequency === 'daysWeek') {
 
-        } else if (i.frequency === 'daysMonth') {
-            const filteredDays = days?.filter(d => i?.monthDays?.includes(parseInt(d.format('DD'))))
-            for (const d of filteredDays) {
-                await handleTransaction(d, i);
+            } else if (i.frequency === 'daysMonth') {
+                const filteredDays = days?.filter(d => i?.monthDays?.includes(parseInt(d.format('DD'))))
+                for (const d of filteredDays) {
+                    await handleTransaction(d, i);
+                }
             }
         }
+
+        const [balance, balanceMLC, balanceUSD, balanceUSDT] = await getAllBalance();
+
+        return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
+    } catch (error) {
+        console.error('runRecurrence error:', error);
+        return res.status(500).json({ code: error?.code, message: error?.message });
     }
-
-    const [balance, balanceMLC, balanceUSD, balanceUSDT] = await getAllBalance();
-
-    return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
 }
