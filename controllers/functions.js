@@ -8,7 +8,7 @@ const recurrentTransactionsModel = require('../models/recurrentTransaction')
 const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 
-const { getCurrentMonthTransactions, getBalanceFunction, getCurrentMonthIncomeTransactions } = require("../utils/common")
+const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance } = require("../utils/common")
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -101,12 +101,7 @@ exports.getDashboard = async (req, res) => {
 
 exports.getBalance = async (req, res) => {
     try {
-        const [balance, balanceMLC, balanceUSD, balanceUSDT] = await Promise.all([
-            getBalanceFunction(),
-            getBalanceFunction('mlc'),
-            getBalanceFunction('usd'),
-            getBalanceFunction('usdt')
-        ])
+        const [balance, balanceMLC, balanceUSD, balanceUSDT] = await getAllBalance();
 
         return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
     } catch (error) {
