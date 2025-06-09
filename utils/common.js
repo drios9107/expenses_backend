@@ -1,6 +1,7 @@
 const moment = require('moment')
 const dbFunctions = require("./mongooseDbFunctions")
 const transactionsModel = require("../models/transaction")
+const recurrentTransactionsModel = require("../models/recurrentTransaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
 const jwt = require('jsonwebtoken')
@@ -47,6 +48,24 @@ exports.getBalanceFunction = async (type = 'cup') => {
         return parseFloat(income - expense).toFixed(2);
     } catch (error) {
         console.error('getBalance error:', error);
+        return res.status(500).json({ code: error?.code, message: error?.message });
+    }
+}
+
+/**
+ * This function returns a promise that resolves an array with the balance of each currency 
+ * @returns {Promise<Array>} An array with the balance of each currency [balanceCUP, balanceMLC, balanceUSD, balanceUSDT]
+ */
+exports.getAllBalance = async () => {
+    try {
+        return Promise.all([
+            this.getBalanceFunction(),
+            this.getBalanceFunction('mlc'),
+            this.getBalanceFunction('usd'),
+            this.getBalanceFunction('usdt')
+        ])
+    } catch (error) {
+        console.error('getAllBalance error:', error);
         return res.status(500).json({ code: error?.code, message: error?.message });
     }
 }
@@ -147,20 +166,22 @@ exports.handleDateSearchTerm = (searchTerm, or) => {
  * @param {string} field - The field name to migrate (e.g., 'category').
  * @throws {Error} If the field is invalid or database operations fail. 
  */
-exports.changeTransactionsFieldType = async (field = 'category') => {
+exports.changeTransactionsFieldType = async ({ model = 'transactions', field = 'category' }) => {
     const BATCH_SIZE = 200; // Adjust based on performance
     let processed = 0;
+
+    const tempModel = model === 'transactions' ? transactionsModel : recurrentTransactionsModel;
 
     const search = { [field]: { $type: 'string' } };
 
     try {
         // Count transactions with string-type category
-        const total = await transactionsModel.countDocuments(search);
+        const total = await tempModel.countDocuments(search);
         console.log(`Found ${total} transactions to migrate.`);
 
         while (processed < total) {
             // Fetch a batch of transactions
-            const items = await transactionsModel.find(search)
+            const items = await tempModel.find(search)
                 .select(`_id ${field}`)
                 .limit(BATCH_SIZE)
                 .lean();
@@ -180,7 +201,7 @@ exports.changeTransactionsFieldType = async (field = 'category') => {
                     }
                 }));
 
-            const result = await transactionsModel.bulkWrite(bulkOps);
+            const result = await tempModel.bulkWrite(bulkOps);
             processed += items.length;
             console.log(`Migrated batch: ${processed}/${total} (${result.modifiedCount} updated)`);
         }
