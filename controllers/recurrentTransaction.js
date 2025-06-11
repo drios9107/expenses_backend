@@ -5,12 +5,12 @@ const { extendMoment } = require('moment-range');
 const momentRange = extendMoment(moment);
 const recurrentTransactionModel = require("../models/recurrentTransaction")
 const transactionsModel = require("../models/transaction");
-const { getAllBalance } = require("../utils/common");
+const { getAllBalance, populateCategoryAndSubCategory } = require("../utils/common");
 const handleCategories = require("../utils/categoryHandlers");
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model)
+        const items = await dbFunctions.find(model, {}, {}, populateCategoryAndSubCategory)
 
         return res.json({
             status: 'success',
@@ -23,7 +23,7 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id)
+        const response = await dbFunctions.findOne(model, req?.params?.id, {}, populateCategoryAndSubCategory)
         if (response?.status === 'error') {
             return res.status(500).json(response)
         }
