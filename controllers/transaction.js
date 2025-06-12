@@ -176,7 +176,20 @@ exports.search = async (req, res) => {
             and.push({ isRecurrent })
 
         if (searchTerm) {
+            const [categoriesData, subCategoriesData] = await Promise.all([
+                dbFunctions.find(categories, { name: getIlikeSearch(searchTerm) }),
+                dbFunctions.find(subCategories, { name: getIlikeSearch(searchTerm) })
+            ])
+
             let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
+
+            const categoriesIds = categoriesData.map(i => i?._id);
+            if (categoriesIds.length > 0)
+                or.push({ category: { $in: categoriesIds } })
+
+            const subCategoriesIds = subCategoriesData.map(i => i?._id);
+            if (subCategoriesIds.length > 0)
+                or.push({ subCategory: { $in: subCategoriesIds } })
 
             if (!isNaN(searchTerm))
                 or.push({ amount: searchTerm })
@@ -217,7 +230,156 @@ exports.search = async (req, res) => {
 
         search.$and = and;
         const transactions = await dbFunctions.search({ model, search, sort, limit: limit + 1, populate: populateCategoryAndSubCategory });
-        const total = await dbFunctions.count(model);
+        const total = await dbFunctions.count(model, search);
+
+        let hasMore = transactions.length > limit;
+        const isFirstSearch = !paginationToken;
+        let resultTransactions = hasMore ? transactions.slice(0, -1) : transactions;
+        if (paginationToken?.direction === 'previous') {
+            resultTransactions = resultTransactions.reverse();
+            hasMore = true;
+        }
+        const amount = resultTransactions?.length;
+
+        const firstTransaction = resultTransactions[0];
+        const lastTransaction = resultTransactions[resultTransactions.length - 1];
+
+        return res.json({
+            status: 'success',
+            data: resultTransactions,
+            total,
+            length: amount,
+            nextPageToken: hasMore ? {
+                lastSortValue: lastTransaction[sortField],
+                lastCreatedAt: lastTransaction.created_at,
+                direction: 'next'
+            } : null,
+            previousPageToken: !isFirstSearch ? {
+                firstSortValue: firstTransaction[sortField],
+                firstCreatedAt: firstTransaction.created_at,
+                direction: 'previous'
+            } : null
+        })
+    } catch (err) {
+        return res.status(500).json({ status: 'error', message: err.message })
+    }
+}
+
+exports.aggregationSearch = async (req, res) => {
+    try {
+        const {
+            searchTerm,
+            limit = 50,
+            paginationToken = null,
+            sortField = 'created_at',
+            sortDirection = 'desc',
+            isExpense,
+            isRecurrent,
+        } = req?.body;
+
+        const properDirection = paginationToken?.direction === 'previous' ?
+            (sortDirection === 'desc' ? 1 : -1) :
+            (sortDirection === 'desc' ? -1 : 1);
+
+        const sort = {
+            [sortField]: properDirection,
+            created_at: properDirection
+        };
+
+        const and = [];
+        if (typeof (isExpense) !== 'undefined')
+            and.push({ isExpense })
+
+        if (typeof (isRecurrent) !== 'undefined')
+            and.push({ isRecurrent })
+
+        if (searchTerm) {
+            let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
+
+
+            if (!isNaN(searchTerm))
+                or.push({ amount: searchTerm })
+
+            if (searchTerm.toString().split('-').length === 3)
+                or = handleDateSearchTerm(searchTerm, or);
+
+            and.push({ $or: or });
+        }
+
+        if (paginationToken) {
+            and.push({
+                $or: paginationToken.direction === 'previous' ?
+                    [
+                        {
+                            [sortField]: {
+                                [sortDirection === 'desc' ? '$gt' : '$lt']: paginationToken.firstSortValue
+                            }
+                        },
+                        {
+                            [sortField]: paginationToken.firstSortValue,
+                            created_at: { $gt: paginationToken.firstCreatedAt }
+                        }
+                    ] :
+                    [
+                        {
+                            [sortField]: {
+                                [sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
+                            }
+                        },
+                        {
+                            [sortField]: paginationToken.lastSortValue,
+                            created_at: { $lt: paginationToken.lastCreatedAt }
+                        }
+                    ]
+            });
+        }
+
+        const search = { $and: and };
+
+        const baseAggregationPipeline = [
+            { $match: search },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category'
+                }
+            },
+            { $unwind: '$category' },
+            {
+                $lookup: {
+                    from: 'subcategories',
+                    localField: 'subCategory',
+                    foreignField: '_id',
+                    as: 'subCategory'
+                }
+            },
+            { $unwind: '$subCategory' }
+        ];
+
+        if (searchTerm) {
+            baseAggregationPipeline.push({
+                $match: {
+                    $or: [
+                        { 'category.name': getIlikeSearch(searchTerm) },
+                        { 'subCategory.name': getIlikeSearch(searchTerm) }
+                    ]
+                }
+            });
+        }
+
+        const totalAggregationPipeline = [...baseAggregationPipeline, { $count: 'total' }];
+        const total = (await model.aggregate(totalAggregationPipeline)?.[0]?.total) ?? 0;
+        console.log('***total', await model.aggregate(totalAggregationPipeline));
+
+        const resultAggregationPipeline = [
+            ...baseAggregationPipeline,
+            { $sort: sort },
+            { $limit: limit + 1 }
+        ];
+
+        const transactions = await model.aggregate(resultAggregationPipeline);
 
         let hasMore = transactions.length > limit;
         const isFirstSearch = !paginationToken;

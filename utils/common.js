@@ -16,8 +16,8 @@ exports.populateCategoryAndSubCategory = [
     { path: 'subCategory', select: 'name _id' },
 ]
 
-exports.getIlikeSearch = (searchTerm) => {
-    return { $regex: searchTerm, $options: 'i' }
+exports.getIlikeSearch = (searchTerm = '') => {
+    return { $regex: searchTerm?.toString(), $options: 'i' }
 }
 
 const getTransactionsTotal = async (type, isExpense) => {
