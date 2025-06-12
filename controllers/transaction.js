@@ -265,6 +265,17 @@ exports.search = async (req, res) => {
     }
 }
 
+/**
+ * This functions searches for transactions using a pagination token and aggregation
+ * @param {String} searchTerm Value to search in transaction fields
+ * @param {Number} limit Amount of transactions to return
+ * @param {Number} paginationToken This field defines in which direction and from what point the search should start. Pagination token is an object containing the following properties: direction (previous or next), firstSortField, firstCreatedAt, lastSortField and lastCreatedAt
+ * @param {String} sortField Field to sort by
+ * @param {String} sortDirection Sort direction
+ * @param {Boolean} isExpense Search for expense or income transactions, if it's not set then it returns both
+ * @param {Boolean} isRecurrent Search for recurrent or non-recurrent transactions, if it's not set then it returns both
+ * @returns Returns a transactions array in "data" property and the total amount of transactions in "total" property
+ */
 exports.aggregationSearch = async (req, res) => {
     try {
         const {
@@ -370,8 +381,7 @@ exports.aggregationSearch = async (req, res) => {
         }
 
         const totalAggregationPipeline = [...baseAggregationPipeline, { $count: 'total' }];
-        const total = (await model.aggregate(totalAggregationPipeline)?.[0]?.total) ?? 0;
-        console.log('***total', await model.aggregate(totalAggregationPipeline));
+        const total = (await model.aggregate(totalAggregationPipeline))?.[0]?.total ?? 0;
 
         const resultAggregationPipeline = [
             ...baseAggregationPipeline,
