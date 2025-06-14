@@ -357,7 +357,7 @@ exports.aggregationSearch = async (req, res) => {
                     as: 'category'
                 }
             },
-            { $unwind: '$category' },
+            { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
             {
                 $lookup: {
                     from: 'subcategories',
@@ -366,7 +366,7 @@ exports.aggregationSearch = async (req, res) => {
                     as: 'subCategory'
                 }
             },
-            { $unwind: '$subCategory' }
+            { $unwind: { path: "$subCategory", preserveNullAndEmptyArrays: true } }
         ];
 
         if (searchTerm) {

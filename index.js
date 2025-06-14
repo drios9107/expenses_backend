@@ -8,6 +8,7 @@ const transactionRouter = require('./routes/transaction')
 const recurrentTransactionRouter = require('./routes/recurrentTransaction')
 const dashboardRouter = require('./routes/dashboard')
 const balanceRouter = require('./routes/balance')
+const functionsRouter = require('./routes/functions')
 const { verifyToken } = require('./utils/middlewares')
 const app = express()
 const cors = require('cors');
@@ -46,6 +47,7 @@ app.use('/recurrent-transactions', recurrentTransactionRouter)
 app.use('/transactions', transactionRouter)
 app.use('/dashboard', dashboardRouter)
 app.use('/balance', balanceRouter)
+app.use('/functions', functionsRouter)
 
 
 app.listen(3001)
