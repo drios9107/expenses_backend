@@ -8,6 +8,10 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose');
 
+exports.populateRole = [
+    { path: 'role', select: 'name _id' }
+];
+
 exports.populateCategory = [
     { path: 'category', select: 'name _id' }
 ];

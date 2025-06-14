@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions");
 const userModel = require("../models/user");
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken');
-const { generateAccessToken, createUser } = require("../utils/common");
+const { generateAccessToken, createUser, populateRole } = require("../utils/common");
 
 exports.register = async (req, res) => {
     if (!req?.body?.email || !req?.body?.password)
@@ -21,7 +21,7 @@ exports.login = async (req, res) => {
         if (!req?.body?.email || !req?.body?.password)
             return res.status(400).json({ status: 'error', code: 'missing-params', message: 'Missing params' })
         else {
-            const response = await dbFunctions.find(userModel, { email: req.body.email });
+            const response = await dbFunctions.find(userModel, { email: req.body.email }, {}, populateRole);
             if (response?.status === 'error')
                 return res.status(500).json({ message: response })
 
@@ -32,7 +32,7 @@ exports.login = async (req, res) => {
             if (!isValid)
                 return res.status(403).json({ code: 'invalid-credentials', message: "The user/password combination is incorrect" })
 
-            const user = { email: response[0]?.email, _id: response[0]?._id?.toString() }
+            const user = { email: response[0]?.email, role: response[0]?.role?.name, _id: response[0]?._id?.toString() }
             const token = generateAccessToken(user)
 
             return res.send({ ...user, token })
