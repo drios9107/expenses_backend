@@ -10,6 +10,13 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    role: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'role',
+        required: true,
+        default: 'user',
+        messsage: 'required field'
+    },
     created_at: {
         type: Number,
         default: Date.now(),
