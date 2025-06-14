@@ -1,11 +1,10 @@
-const dbFunctions = require("../utils/mongooseDbFunctions")
-const model = require("../models/subCategory")
-const handleCategories = require("../utils/categoryHandlers");
-const { populateCategory, sendCreateUpdateSuccessResponse } = require("../utils/common");
+const dbFunctions = require("../utils/mongooseDbFunctions");
+const model = require("../models/role");
+const { sendCreateUpdateSuccessResponse } = require("../utils/common");
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, {}, { name: 1 }, populateCategory);
+        const items = await dbFunctions.find(model, {}, { name: 1 });
 
         return res.json({
             status: 'success',
@@ -18,9 +17,10 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id, {}, populateCategory)
-        if (response?.status === 'error')
+        const response = await dbFunctions.findOne(model, req?.params?.id)
+        if (response?.status === 'error') {
             return res.status(500).json(response)
+        }
 
         return res.json({
             status: 'success',
@@ -31,17 +31,21 @@ exports.getDetails = async (req, res) => {
     }
 }
 
-exports.create = [handleCategories, async (req, res) => {
+exports.create = async (req, res) => {
     try {
         const response = await dbFunctions.insertOne(model, req?.body)
-        if (response?.status === 'error')
+        if (response?.status === 'error') {
             return res.status(500).json(response)
+        }
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id)
+        return res.json({
+            status: 'success',
+            data: await dbFunctions.findOne(model, response._id)
+        })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
-}]
+}
 
 exports.delete = async (req, res) => {
     try {
@@ -50,6 +54,7 @@ exports.delete = async (req, res) => {
         if (response?.status === 'error') {
             return res.status(500).json(response)
         }
+
         return res.json({
             status: 'success',
             id: req?.params?.id
@@ -59,15 +64,16 @@ exports.delete = async (req, res) => {
     }
 }
 
-exports.update = [handleCategories, async (req, res) => {
+exports.update = async (req, res) => {
     try {
         const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
 
-        if (response?.status === 'error')
+        if (response?.status === 'error') {
             return res.status(500).json(response)
+        }
 
         return sendCreateUpdateSuccessResponse(res, model, response?._id);
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
-}]
+}
