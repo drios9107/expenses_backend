@@ -2,6 +2,7 @@ require('dotenv').config()
 require('./utils/mongooseConnection')
 const express = require('express')
 const authRouter = require('./routes/auth')
+const userRouter = require('./routes/user')
 const categoryRouter = require('./routes/category')
 const subCategoryRouter = require('./routes/subCategory')
 const transactionRouter = require('./routes/transaction')
@@ -41,6 +42,7 @@ app.use(verifyToken);
 app.get('/', (req, res) => res.status(404).end());
 
 app.use('/auth', authRouter)
+app.use('/users', userRouter)
 app.use('/categories', categoryRouter)
 app.use('/subCategories', subCategoryRouter)
 app.use('/recurrent-transactions', recurrentTransactionRouter)

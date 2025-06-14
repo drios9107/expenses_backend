@@ -2,16 +2,13 @@ const dbFunctions = require("../utils/mongooseDbFunctions");
 const userModel = require("../models/user");
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken');
-const { generateAccessToken } = require("../utils/common");
+const { generateAccessToken, createUser } = require("../utils/common");
 
 exports.register = async (req, res) => {
     if (!req?.body?.email || !req?.body?.password)
         return res.status(400).json({ status: 'error', code: 'missing-params', message: 'Missing params' })
     else {
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(req?.body?.password, salt);
-        const createResponse = await dbFunctions.insertOne(userModel, { ...req?.body, password: hash });
-
+        const createResponse = await createUser(req);
         if (createResponse?.status === 'error')
             return res.status(500).json(createResponse)
 

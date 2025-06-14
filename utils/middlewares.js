@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 
 const authRoutes = ['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken'];
 const testingEndpoints = [];
-const freeTest = true;
+const freeTest = false;
 
 exports.verifyToken = async (req, res, next) => {
     try {

@@ -2,8 +2,9 @@ const moment = require('moment')
 const dbFunctions = require("./mongooseDbFunctions")
 const transactionsModel = require("../models/transaction")
 const recurrentTransactionsModel = require("../models/recurrentTransaction")
-const categoriesModel = require("../models/category")
+const userModel = require("../models/user")
 const subCategoriesModel = require("../models/subCategory")
+const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose');
 
@@ -39,6 +40,13 @@ const getTransactionsTotal = async (type, isExpense) => {
         { ...groupBy }
     ])
     return response[0]?.total ?? 0;
+}
+
+exports.createUser = async (req) => {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(req?.body?.password, salt);
+
+    return dbFunctions.insertOne(userModel, { ...req?.body, password: hash });
 }
 
 exports.getBalanceFunction = async (type = 'cup') => {
