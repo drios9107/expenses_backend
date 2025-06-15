@@ -1,10 +1,10 @@
 const dbFunctions = require("../utils/mongooseDbFunctions");
 const model = require("../models/user");
-const { sendCreateUpdateSuccessResponse, createUser, populateRole } = require("../utils/common");
+const { sendCreateUpdateSuccessResponse, createUser, userSearchCommonOptions } = require("../utils/common");
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, { restrictSearch: { password: 0 }, sort: { name: 1 }, populate: populateRole });
+        const items = await dbFunctions.find(model, { ...userSearchCommonOptions, sort: { name: 1 } });
 
         return res.json({
             status: 'success',
@@ -17,14 +17,14 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateRole })
+        const response = await dbFunctions.findOne(model, req?.params?.id, userSearchCommonOptions)
         if (response?.status === 'error') {
             return res.status(500).json(response)
         }
 
         return res.json({
             status: 'success',
-            data: response
+            data
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
@@ -39,7 +39,7 @@ exports.create = async (req, res) => {
 
         return res.json({
             status: 'success',
-            data: await dbFunctions.findOne(model, response._id, { populate: populateRole })
+            data: await dbFunctions.findOne(model, response._id, userSearchCommonOptions)
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
@@ -71,7 +71,7 @@ exports.update = async (req, res) => {
             return res.status(500).json(response)
         }
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id);
+        return sendCreateUpdateSuccessResponse(res, model, response?._id, userSearchCommonOptions);
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }

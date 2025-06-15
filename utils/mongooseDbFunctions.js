@@ -29,7 +29,7 @@ exports.find = (model, { search = {}, restrictSearch = {}, sort = {}, populate =
         })
 }
 
-exports.findOne = (model, id, { sort = {}, populate = [] } = {}) => model.findById(id).sort(sort).populate(populate)
+exports.findOne = (model, id, { restrictSearch = {}, sort = {}, populate = [] } = {}) => model.findById(id, restrictSearch).sort(sort).populate(populate).lean()
     .catch(error => {
         throw new Error(error)
     })

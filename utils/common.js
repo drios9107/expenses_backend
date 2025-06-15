@@ -21,6 +21,8 @@ exports.populateCategoryAndSubCategory = [
     { path: 'subCategory', select: 'name _id' },
 ]
 
+exports.userSearchCommonOptions = { restrictSearch: { password: 0 }, populate: this.populateRole };
+
 exports.getIlikeSearch = (searchTerm = '') => {
     return { $regex: searchTerm?.toString(), $options: 'i' }
 }
@@ -142,8 +144,8 @@ exports.generateAccessToken = (params) => {
     return jwt.sign(params, process.env.JWT_SECRET, { expiresIn: '24h' });
 }
 
-exports.sendCreateUpdateSuccessResponse = async (res, model, id) => {
-    const data = await dbFunctions.findOne(model, id);
+exports.sendCreateUpdateSuccessResponse = async (res, model, id, options = {}) => {
+    const data = await dbFunctions.findOne(model, id, options);
     return res.status(200).json({ status: 'success', data });
 };
 
