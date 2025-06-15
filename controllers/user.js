@@ -1,10 +1,10 @@
 const dbFunctions = require("../utils/mongooseDbFunctions");
 const model = require("../models/user");
-const { sendCreateUpdateSuccessResponse, createUser } = require("../utils/common");
+const { sendCreateUpdateSuccessResponse, createUser, populateRole } = require("../utils/common");
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, {}, { name: 1 });
+        const items = await dbFunctions.find(model, { restrictSearch: { password: 0 }, sort: { name: 1 }, populate: populateRole });
 
         return res.json({
             status: 'success',
@@ -17,7 +17,7 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id)
+        const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateRole })
         if (response?.status === 'error') {
             return res.status(500).json(response)
         }
@@ -39,7 +39,7 @@ exports.create = async (req, res) => {
 
         return res.json({
             status: 'success',
-            data: await dbFunctions.findOne(model, response._id)
+            data: await dbFunctions.findOne(model, response._id, { populate: populateRole })
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })

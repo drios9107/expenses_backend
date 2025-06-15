@@ -5,7 +5,7 @@ const { populateCategory, sendCreateUpdateSuccessResponse } = require("../utils/
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, {}, { name: 1 }, populateCategory);
+        const items = await dbFunctions.find(model, { sort: { name: 1 }, populate: populateCategory });
 
         return res.json({
             status: 'success',
@@ -18,7 +18,7 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id, {}, populateCategory)
+        const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateCategory })
         if (response?.status === 'error')
             return res.status(500).json(response)
 

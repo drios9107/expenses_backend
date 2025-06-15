@@ -10,7 +10,7 @@ const handleCategories = require("../utils/categoryHandlers");
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, {}, {}, populateCategoryAndSubCategory)
+        const items = await dbFunctions.find(model, { populate: populateCategoryAndSubCategory })
 
         return res.json({
             status: 'success',
@@ -23,7 +23,7 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id, {}, populateCategoryAndSubCategory)
+        const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateCategoryAndSubCategory })
         if (response?.status === 'error') {
             return res.status(500).json(response)
         }
@@ -97,7 +97,7 @@ const handleTransaction = async (d, i) => {
 
 exports.runRecurrence = async (req, res) => {
     try {
-        const recurrentTransactions = await dbFunctions.find(recurrentTransactionModel, { isActive: true });
+        const recurrentTransactions = await dbFunctions.find(recurrentTransactionModel, { search: { isActive: true } });
         if (recurrentTransactions?.status === 'error') {
             return res.status(500).json(recurrentTransactions)
         }

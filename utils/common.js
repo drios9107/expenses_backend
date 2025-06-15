@@ -99,7 +99,7 @@ exports.getCurrentMonthIncomeTransactions = async (currentMonth, currentYear) =>
     search['isExpense'] = false
     search['type'] = 'cup'
 
-    const currentMonthTransactions = await dbFunctions.find(transactionsModel, search, { amount: -1 });
+    const currentMonthTransactions = await dbFunctions.find(transactionsModel, { search, sort: { amount: -1 } });
     return currentMonthTransactions;
 }
 
@@ -121,7 +121,7 @@ exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options 
     if (options?.sort)
         sort = options.sort;
 
-    const currentMonthTransactions = await dbFunctions.find(transactionsModel, search, sort, this.populateCategoryAndSubCategory);
+    const currentMonthTransactions = await dbFunctions.find(transactionsModel, { search, sort, populate: this.populateCategoryAndSubCategory });
 
     if (options?.replaceFields) {
         return currentMonthTransactions.map((i, index) => {
@@ -277,8 +277,10 @@ exports.changeSubCategoryFieldType = async (field = 'category') => {
 
 exports.removeUnnecessarySubcategories = async () => {
     try {
-        const subCategories = await dbFunctions.find(subCategoriesModel);
-        const transactions = await dbFunctions.find(transactionsModel);
+        const [subCategories, transactions] = await Promise.all([
+            dbFunctions.find(subCategoriesModel),
+            dbFunctions.find(transactionsModel)
+        ]);
         console.log(transactions?.length);
         const subCategoriesInUse = Array.from(new Set(
             transactions

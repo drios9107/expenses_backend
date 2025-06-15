@@ -7,29 +7,29 @@ exports.count = (model, search = {}) => {
         })
 }
 
-exports.search = ({ model, search = {}, sort = {}, limit = 10, populate = [] }) => {
-    return model.find(search).sort(sort).limit(limit).populate(populate)
+exports.search = (model, { search = {}, restrictSearch = {}, sort = {}, limit = 10, populate = [] }) => {
+    return model.find(search, restrictSearch).sort(sort).limit(limit).populate(populate)
         .catch(error => {
             throw new Error(error)
         })
 }
 
-exports.searchWithSkip = ({ model, search = {}, sort = {}, limit = 10, page = 0, populate = [] }) => {
-    return model.find(search).sort(sort).limit(limit).skip(page * limit).populate(populate)
+exports.searchWithSkip = (model, { search = {}, restrictSearch = {}, sort = {}, limit = 10, page = 0, populate = [] }) => {
+    return model.find(search, restrictSearch).sort(sort).limit(limit).skip(page * limit).populate(populate)
         .catch(error => {
             throw new Error(error)
         })
 }
 
-exports.find = (model, search = {}, sort = {}, populate = []) => {
-    return model.find(search).sort(sort).populate(populate)
+exports.find = (model, { search = {}, restrictSearch = {}, sort = {}, populate = [] } = {}) => {
+    return model.find(search, restrictSearch).sort(sort).populate(populate)
         .catch(error => {
             throw new Error(error)
             // throw { ...(new Error("message")), code: 'default' }
         })
 }
 
-exports.findOne = (model, id, sort = {}, populate = []) => model.findById(id).sort(sort).populate(populate)
+exports.findOne = (model, id, { sort = {}, populate = [] } = {}) => model.findById(id).sort(sort).populate(populate)
     .catch(error => {
         throw new Error(error)
     })

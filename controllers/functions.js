@@ -161,7 +161,7 @@ exports.addCreatedAt = async (req, res) => {
             }[req?.body?.model];
 
             const search = { created_at: { $exists: false } };
-            const items = await dbFunctions.find(model, search);
+            const items = await dbFunctions.find(model, { search });
             const response = []
             for (let index = 0; index < items.length; index++) {
                 const temp = items[index];

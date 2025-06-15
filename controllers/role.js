@@ -4,7 +4,7 @@ const { sendCreateUpdateSuccessResponse } = require("../utils/common");
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, {}, { name: 1 });
+        const items = await dbFunctions.find(model, { sort: { name: 1 } });
 
         return res.json({
             status: 'success',

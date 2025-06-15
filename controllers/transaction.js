@@ -12,7 +12,7 @@ exports.getTransactionsByCategory = async (req, res) => {
         if (isNaN(currentMonth) || !currentYear || !categoryName)
             return res.status(400).json({ status: 'error', message: 'Missing params' })
 
-        const category = await dbFunctions.find(categories, { name: decodeURIComponent(categoryName) })
+        const category = await dbFunctions.find(categories, { search: { name: decodeURIComponent(categoryName) } })
         if (category.length === 0)
             return res.status(404).json({ status: 'error', message: 'category-not-found' })
 
@@ -32,13 +32,13 @@ exports.getTransactionsByCategoryAndSubCategory = async (req, res) => {
         if (isNaN(currentMonth) || !currentYear || !categoryName || !subCategoryName)
             return res.status(400).json({ status: 'error', message: 'Missing params' })
 
-        const category = await dbFunctions.find(categories, { name: decodeURIComponent(categoryName) })
+        const category = await dbFunctions.find(categories, { search: { name: decodeURIComponent(categoryName) } })
         if (category.length === 0)
             return res.status(404).json({ status: 'error', message: 'category-not-found' })
 
         const categoryId = category[0]?._id?.toString();
 
-        const subCategory = await dbFunctions.find(subCategories, { name: decodeURIComponent(subCategoryName), category: categoryId })
+        const subCategory = await dbFunctions.find(subCategories, { search: { name: decodeURIComponent(subCategoryName), category: categoryId } })
         if (subCategory.length === 0)
             return res.status(404).json({ status: 'error', message: 'subCategory-not-found' })
 
@@ -120,7 +120,7 @@ exports.simpleSearch = async (req, res) => {
 
         search.$and = and;
 
-        const transactions = await dbFunctions.searchWithSkip({ model, search, sort, limit, page, populate: populateCategoryAndSubCategory });
+        const transactions = await dbFunctions.searchWithSkip(model, { search, sort, limit, page, populate: populateCategoryAndSubCategory });
         const total = await dbFunctions.count(model);
 
         return res.json({
@@ -176,9 +176,10 @@ exports.search = async (req, res) => {
             and.push({ isRecurrent })
 
         if (searchTerm) {
+            const nameSearch = { name: getIlikeSearch(searchTerm) }
             const [categoriesData, subCategoriesData] = await Promise.all([
-                dbFunctions.find(categories, { name: getIlikeSearch(searchTerm) }),
-                dbFunctions.find(subCategories, { name: getIlikeSearch(searchTerm) })
+                dbFunctions.find(categories, { search: nameSearch }),
+                dbFunctions.find(subCategories, { search: nameSearch })
             ])
 
             let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
@@ -229,7 +230,7 @@ exports.search = async (req, res) => {
         }
 
         search.$and = and;
-        const transactions = await dbFunctions.search({ model, search, sort, limit: limit + 1, populate: populateCategoryAndSubCategory });
+        const transactions = await dbFunctions.search(model, { search, sort, limit: limit + 1, populate: populateCategoryAndSubCategory });
         const total = await dbFunctions.count(model, search);
 
         let hasMore = transactions.length > limit;
@@ -426,7 +427,7 @@ exports.aggregationSearch = async (req, res) => {
 
 exports.getAll = async (req, res) => {
     try {
-        const items = await dbFunctions.find(model, {}, {}, populateCategoryAndSubCategory)
+        const items = await dbFunctions.find(model, { populate: populateCategoryAndSubCategory })
 
         return res.json({
             status: 'success',
@@ -439,7 +440,7 @@ exports.getAll = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
     try {
-        const response = await dbFunctions.findOne(model, req?.params?.id, {}, populateCategoryAndSubCategory)
+        const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateCategoryAndSubCategory })
         if (response?.status === 'error')
             return res.status(500).json(response)
 

@@ -21,7 +21,7 @@ exports.login = async (req, res) => {
         if (!req?.body?.email || !req?.body?.password)
             return res.status(400).json({ status: 'error', code: 'missing-params', message: 'Missing params' })
         else {
-            const response = await dbFunctions.find(userModel, { email: req.body.email }, {}, populateRole);
+            const response = await dbFunctions.find(userModel, { search: { email: req.body.email }, populate: populateRole });
             if (response?.status === 'error')
                 return res.status(500).json({ message: response })
 
