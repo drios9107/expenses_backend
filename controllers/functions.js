@@ -8,7 +8,7 @@ const recurrentTransactionsModel = require('../models/recurrentTransaction')
 const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 
-const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance } = require("../utils/common")
+const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory } = require("../utils/common")
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -107,6 +107,62 @@ exports.getBalance = async (req, res) => {
     } catch (error) {
         console.error('getBalance error:', error);
         return res.status(500).json({ code: error?.code, message: error?.message });
+    }
+}
+
+exports.convertCurrency = async (req, res) => {
+    try {
+        const errors = [];
+        if (!req?.body.fromType)
+            errors.push('fromType')
+        if (!req?.body.toType)
+            errors.push('toType')
+        if (!req?.body.sourceAmount)
+            errors.push('sourceAmount')
+        if (!req?.body.finalAmount)
+            errors.push('finalAmount')
+
+        if (errors.length > 0)
+            return res.status(400).json({ status: 'error', message: `Missing params: ${errors.join(', ')}` })
+
+        const subCategories = await dbFunctions.find(subCategoriesModel, { search: { name: getIlikeSearch('Conversión de Monedas') } })
+        if (subCategories?.length === 0)
+            return res.status(404).json({ status: 'error', message: 'subCategory-not-found' })
+
+        const subCategory = subCategories[0]?._id;
+        const category = subCategories[0]?.category?._id;
+        const date = req?.body?.date;
+
+        const commonPayload = {
+            category,
+            subCategory,
+            isRecurrent: false,
+            description: req?.body?.description ?? 'Conversión de Monedas',
+            created_at: moment().valueOf(),
+            date
+        };
+
+        const responses = await Promise.all([
+            dbFunctions.insertOne(transactionsModel, {
+                ...commonPayload,
+                amount: req?.body?.sourceAmount,
+                type: req?.body?.fromType,
+                isExpense: true
+            }, { populate: populateCategoryAndSubCategory }),
+            dbFunctions.insertOne(transactionsModel, {
+                ...commonPayload,
+                amount: req?.body?.finalAmount,
+                type: req?.body?.toType,
+                isExpense: false
+            }, { populate: populateCategoryAndSubCategory })
+        ]);
+
+        if (responses?.[0]?.status === 'error' || responses?.[1]?.status === 'error')
+            return res.status(500).json({ status: 'error', message: responses?.[0]?.message ?? responses?.[1]?.message })
+
+        return res.json({ status: 'success', data: responses })
+    } catch (error) {
+        return res.status(500).json({ status: 'error', message: error.message })
     }
 }
 
