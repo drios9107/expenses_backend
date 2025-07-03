@@ -459,7 +459,7 @@ exports.create = [handleCategories, async (req, res) => {
         if (response?.status === 'error')
             return res.status(500).res.json(response)
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id)
+        return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populateCategoryAndSubCategory })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
@@ -489,7 +489,7 @@ exports.update = [handleCategories, async (req, res) => {
         if (response?.status === 'error')
             return res.status(500).json(response)
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id)
+        return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populateCategoryAndSubCategory })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
