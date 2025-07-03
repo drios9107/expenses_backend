@@ -5,7 +5,7 @@ const { extendMoment } = require('moment-range');
 const momentRange = extendMoment(moment);
 const recurrentTransactionModel = require("../models/recurrentTransaction")
 const transactionsModel = require("../models/transaction");
-const { getAllBalance, populateCategoryAndSubCategory } = require("../utils/common");
+const { getAllBalance, populateCategoryAndSubCategory, sendCreateUpdateSuccessResponse } = require("../utils/common");
 const handleCategories = require("../utils/categoryHandlers");
 
 exports.getAll = async (req, res) => {
@@ -44,7 +44,7 @@ exports.create = [handleCategories, async (req, res) => {
             return res.status(500).json(recurrentTransactionResponse)
         }
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id);
+        return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populateCategoryAndSubCategory });
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
@@ -73,7 +73,7 @@ exports.update = [handleCategories, async (req, res) => {
         if (response?.status === 'error')
             return res.status(500).json(response)
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id);
+        return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populateCategoryAndSubCategory });
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
