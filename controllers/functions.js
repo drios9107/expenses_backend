@@ -47,6 +47,7 @@ exports.getDashboard = async (req, res) => {
             const stackedDays = stacked?.days;
             const dayName = moment(item?.date).format('YYYY-MM-DD');
             const dayValue = {
+                date: item?.date,
                 category: categoryName,
                 subCategory: subCategoryName,
                 amount: item?.amount ?? 0,
