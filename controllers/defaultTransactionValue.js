@@ -20,18 +20,18 @@ exports.getDefaultTransactionValuesByCategoryAndSubCategory = async (req, res) =
     try {
         const { category: categoryId, subcategory: subCategoryId } = req.query;
         if (!categoryId || !subCategoryId)
-            return res.status(400).json({ status: 'error', message: 'Missing params' })
+            return res.status(400).json({ status: 'error', message: 'Missing params', code: 'no-error-needed' })
 
         if (!mongoose.isValidObjectId(categoryId))
-            return res.status(400).json({ status: 'error', message: 'Wrong categoryId' })
+            return res.status(400).json({ status: 'error', message: 'Wrong categoryId', code: 'no-error-needed' })
 
         if (!mongoose.isValidObjectId(subCategoryId))
-            return res.status(400).json({ status: 'error', message: 'Wrong subCategoryId' })
+            return res.status(400).json({ status: 'error', message: 'Wrong subCategoryId', code: 'no-error-needed' })
 
         const items = await dbFunctions.find(model, { search: { category: categoryId, subCategory: subCategoryId }, populate: populateCategoryAndSubCategory })
 
         if (items.length === 0)
-            return res.status(404).json({ status: 'error', message: 'There are no default transaction values for this category and subcategory' })
+            return res.status(404).json({ status: 'error', message: 'There are no default transaction values for this category and subcategory', code: 'no-error-needed' })
 
         return res.json({
             status: 'success',
