@@ -30,9 +30,12 @@ exports.getDefaultTransactionValuesByCategoryAndSubCategory = async (req, res) =
 
         const items = await dbFunctions.find(model, { search: { category: categoryId, subCategory: subCategoryId }, populate: populateCategoryAndSubCategory })
 
+        if (items.length === 0)
+            return res.status(404).json({ status: 'error', message: 'There are no default transaction values for this category and subcategory' })
+
         return res.json({
             status: 'success',
-            data: items
+            data: items[0]
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
