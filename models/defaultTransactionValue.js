@@ -19,14 +19,6 @@ const schema = new mongoose.Schema({
         min: 0,
         required: true
     },
-    type: {
-        type: String,
-        required: true,
-    },
-    isExpense: {
-        type: Boolean,
-        required: false,
-    },
     description: {
         type: String,
         required: false,
