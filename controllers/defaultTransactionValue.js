@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const dbFunctions = require("../utils/mongooseDbFunctions");
 const model = require("../models/defaultTransactionValue");
 const { sendCreateUpdateSuccessResponse, populateCategoryAndSubCategory } = require("../utils/common");
@@ -5,6 +6,29 @@ const { sendCreateUpdateSuccessResponse, populateCategoryAndSubCategory } = requ
 exports.getAll = async (req, res) => {
     try {
         const items = await dbFunctions.find(model, { populate: populateCategoryAndSubCategory });
+
+        return res.json({
+            status: 'success',
+            data: items
+        })
+    } catch (err) {
+        return res.status(500).json({ status: 'error', message: err.message })
+    }
+}
+
+exports.getDefaultTransactionValuesByCategoryAndSubCategory = async (req, res) => {
+    try {
+        const { category: categoryId, subcategory: subCategoryId } = req.query;
+        if (!categoryId || !subCategoryId)
+            return res.status(400).json({ status: 'error', message: 'Missing params' })
+
+        if (!mongoose.isValidObjectId(categoryId))
+            return res.status(400).json({ status: 'error', message: 'Wrong categoryId' })
+
+        if (!mongoose.isValidObjectId(subCategoryId))
+            return res.status(400).json({ status: 'error', message: 'Wrong subCategoryId' })
+
+        const items = await dbFunctions.find(model, { search: { category: categoryId, subCategory: subCategoryId }, populate: populateCategoryAndSubCategory })
 
         return res.json({
             status: 'success',
