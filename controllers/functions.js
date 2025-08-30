@@ -4,9 +4,11 @@ const usersModel = require("../models/user")
 const transactionsModel = require("../models/transaction")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
+const dtvModel = require('../models/defaultTransactionValue')
 const recurrentTransactionsModel = require('../models/recurrentTransaction')
 const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
+const dtvJson = require("../utils/default/transactionDefaultValues.json")
 
 const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory } = require("../utils/common")
 
@@ -167,6 +169,29 @@ exports.convertCurrency = async (req, res) => {
     }
 }
 
+const defaultTransactionValueExists = (categories, subCategories, dtv, item) => {
+    const categoryUid = categories.find(c => c?.name === item?.category)?._id?.toString();
+    const subCategoryUid = subCategories.find(s => s.name === item.subCategory && s.category?.toString() === categoryUid)?._id?.toString();
+    const exists = dtv.some(s => s.category?.toString() === categoryUid && s.subCategory?.toString() === subCategoryUid)
+
+    return exists
+}
+
+const checkDefaultTransactionValuesExists = async (categories, subCategories) => {
+    const dtv = await dbFunctions.find(dtvModel);
+
+    const missingDTV = dtvJson
+        .filter(i => !defaultTransactionValueExists(categories, subCategories, dtv, i))
+        .map(i => ({
+            ...i,
+            category: categories.find(c => c?.name === i.category)?._id?.toString(),
+            subCategory: subCategories.find(c => c?.name === i.subCategory)?._id?.toString()
+        }))
+    console.log('***missingDTV:', missingDTV?.length)
+    if (missingDTV?.length > 0)
+        await dbFunctions.insertMany(dtvModel, missingDTV)
+}
+
 const checkCategoriesExists = async (categories) => {
     const existingCategoryNames = categories.map(i => i.name)
     if (categories) {
@@ -192,6 +217,8 @@ const checkSubCategoriesExists = async (categories, subCategories) => {
         console.log('***missingSubCategories:', missingSubCategories?.length)
         if (missingSubCategories?.length > 0)
             await dbFunctions.insertMany(subCategoriesModel, missingSubCategories)
+
+        checkDefaultTransactionValuesExists(categories, subCategories);
     }
 }
 
@@ -199,10 +226,12 @@ exports.callFirstRun = async () => {
     let categories = await dbFunctions.find(categoriesModel)
     if (categories) {
         checkCategoriesExists(categories);
-        categories = await dbFunctions.find(categoriesModel);
-        const subCategories = await dbFunctions.find(subCategoriesModel)
-        if (categories && subCategories)
-            checkSubCategoriesExists(categories, subCategories);
+        const [updatedCategories, subCategories] = await Promise.all([
+            dbFunctions.find(categoriesModel),
+            dbFunctions.find(subCategoriesModel)
+        ]);
+        if (updatedCategories && subCategories)
+            checkSubCategoriesExists(updatedCategories, subCategories);
     }
 }
 
