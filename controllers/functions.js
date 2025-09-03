@@ -2,10 +2,13 @@ const moment = require('moment')
 const dbFunctions = require("../utils/mongooseDbFunctions")
 const usersModel = require("../models/user")
 const transactionsModel = require("../models/transaction")
+const rolesModel = require("../models/role")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
 const dtvModel = require('../models/defaultTransactionValue')
 const recurrentTransactionsModel = require('../models/recurrentTransaction')
+const defaultRoles = require("../utils/default/roles.json")
+const defaultUsers = require("../utils/default/users.json")
 const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 const dtvJson = require("../utils/default/transactionDefaultValues.json")
@@ -192,14 +195,13 @@ const checkDefaultTransactionValuesExists = async (categories, subCategories) =>
         await dbFunctions.insertMany(dtvModel, missingDTV)
 }
 
-const checkCategoriesExists = async (categories) => {
-    const existingCategoryNames = categories.map(i => i.name)
-    if (categories) {
-        const missingCategories = defaultCategories.filter(i => !existingCategoryNames.includes(i?.name))
-        console.log('***missingCategories:', missingCategories.length)
-        if (missingCategories?.length > 0)
-            await dbFunctions.insertMany(categoriesModel, missingCategories)
-    }
+const checkMissingItemExists = async (model, dataList, jsonValues = [], logName, checkField = 'name') => {
+    const existingNames = dataList.map(i => i?.[checkField])
+
+    const missingItems = jsonValues.filter(i => !existingNames.includes(i?.[checkField]))
+    console.log(`***missing ${logName}:`, missingItems.length)
+    if (missingItems?.length > 0)
+        await dbFunctions.insertMany(model, missingItems)
 }
 
 const subCategoryExists = (categories, subCategories, item) => {
@@ -223,9 +225,13 @@ const checkSubCategoriesExists = async (categories, subCategories) => {
 }
 
 exports.callFirstRun = async () => {
-    let categories = await dbFunctions.find(categoriesModel)
+    let [categories, roles, users] = await Promise.all([
+        dbFunctions.find(categoriesModel),
+        dbFunctions.find(rolesModel),
+        dbFunctions.find(userModel)
+    ])
     if (categories) {
-        checkCategoriesExists(categories);
+        await checkMissingItemExists(categoriesModel, categories, defaultCategories, 'categories');
         const [updatedCategories, subCategories] = await Promise.all([
             dbFunctions.find(categoriesModel),
             dbFunctions.find(subCategoriesModel)
@@ -233,6 +239,9 @@ exports.callFirstRun = async () => {
         if (updatedCategories && subCategories)
             checkSubCategoriesExists(updatedCategories, subCategories);
     }
+
+    await checkMissingItemExists(rolesModel, roles, defaultRoles, 'roles');
+    await checkMissingItemExists(usersModel, users, defaultUsers, 'users', 'email');
 }
 
 exports.addCreatedAt = async (req, res) => {
