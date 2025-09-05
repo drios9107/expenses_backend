@@ -13,7 +13,7 @@ const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 const dtvJson = require("../utils/default/transactionDefaultValues.json")
 
-const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory } = require("../utils/common")
+const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory, createUser } = require("../utils/common")
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -195,13 +195,17 @@ const checkDefaultTransactionValuesExists = async (categories, subCategories) =>
         await dbFunctions.insertMany(dtvModel, missingDTV)
 }
 
-const checkMissingItemExists = async (model, dataList, jsonValues = [], logName, checkField = 'name') => {
+const checkMissingItemExists = async (model, dataList, jsonValues = [], modelName, checkField = 'name') => {
     const existingNames = dataList.map(i => i?.[checkField])
 
     const missingItems = jsonValues.filter(i => !existingNames.includes(i?.[checkField]))
-    console.log(`***missing ${logName}:`, missingItems.length)
+    console.log(`***missing ${modelName}:`, missingItems.length)
     if (missingItems?.length > 0)
-        await dbFunctions.insertMany(model, missingItems)
+        if (modelName === 'users')
+            for (let i = 0; i < missingItems.length; i++)
+                await createUser({ body: missingItems[i] })
+        else
+            await dbFunctions.insertMany(model, missingItems)
 }
 
 const subCategoryExists = (categories, subCategories, item) => {
