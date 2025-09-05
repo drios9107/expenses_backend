@@ -228,7 +228,7 @@ exports.callFirstRun = async () => {
     let [categories, roles, users] = await Promise.all([
         dbFunctions.find(categoriesModel),
         dbFunctions.find(rolesModel),
-        dbFunctions.find(userModel)
+        dbFunctions.find(usersModel)
     ])
     if (categories) {
         await checkMissingItemExists(categoriesModel, categories, defaultCategories, 'categories');
