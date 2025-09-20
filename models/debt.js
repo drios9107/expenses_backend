@@ -27,6 +27,11 @@ const schema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    transferId: {
+        type: String,
+        required: true,
+        default: 'cash'
+    },
     created_at: {
         type: Number,
         default: Date.now(),
