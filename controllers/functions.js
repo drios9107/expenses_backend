@@ -2,6 +2,7 @@ const moment = require('moment')
 const dbFunctions = require("../utils/mongooseDbFunctions")
 const usersModel = require("../models/user")
 const transactionsModel = require("../models/transaction")
+const debtsModel = require("../models/debt")
 const rolesModel = require("../models/role")
 const categoriesModel = require("../models/category")
 const subCategoriesModel = require("../models/subCategory")
@@ -13,7 +14,57 @@ const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 const dtvJson = require("../utils/default/transactionDefaultValues.json")
 
-const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory, createUser } = require("../utils/common")
+const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory, createUser, populatePerson } = require("../utils/common")
+
+const getPersonFullName = row => {
+    let fullname = row?.name;
+    if (row?.lastname)
+        fullname += ` ${row?.lastname}`
+
+    return fullname?.trim();
+}
+
+const getDebts = async () => {
+    try {
+        const items = await dbFunctions.find(debtsModel, { search: { isCompleted: false }, sort: { date: -1 }, populate: populatePerson });
+
+        if (items?.length === 0)
+            return [];
+
+        const data = []
+        items.forEach(d => {
+            const dataIndex = data.findIndex(p => p?.person?._id === d?.person?._id);
+            if (dataIndex === -1) {
+                data.push({
+                    person: {
+                        _id: d?.person?._id,
+                        name: getPersonFullName(d?.person),
+                    },
+                    debts: {
+                        [d?.type]: parseFloat(d?.amount ?? 0) - parseFloat(d?.paid ?? 0)
+                    }
+                })
+            } else {
+                const currentPersonTotalDebts = { ...data[dataIndex].debts }
+                const existsSameCurrency = Object.keys(currentPersonTotalDebts).includes(d?.type)
+                const accumulated = existsSameCurrency ? parseFloat(currentPersonTotalDebts[d?.type] ?? 0) : 0;
+
+                currentPersonTotalDebts[d?.type] = accumulated + parseFloat(d?.amount ?? 0) - parseFloat(d?.paid ?? 0)
+
+                data[dataIndex] = {
+                    ...data[dataIndex],
+                    debts: currentPersonTotalDebts,
+                };
+            }
+        })
+
+        return data;
+    } catch (err) {
+        return res.status(500).json({ status: 'error', message: err.message })
+    }
+}
+
+
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -33,7 +84,8 @@ exports.getDashboard = async (req, res) => {
                 biggestIncomeDate,
                 categoryData: { labels: [], values: [] },
                 subCategoryData: { labels: [], values: [] },
-                days: {}
+                days: {},
+                debtSection: []
             })
         }
 
@@ -82,13 +134,16 @@ exports.getDashboard = async (req, res) => {
                 biggestIncomeDate,
                 categoryData,
                 subCategoryData,
-                days
+                days,
+                debtSection: []
             })
         }
 
         biggestIncome = incomeTransactions?.[0]?.amount ?? 0;
         biggestIncomeDate = incomeTransactions?.[0]?.date;
         incomeTransactions.forEach(i => monthIncome += i?.amount);
+
+        const debtSection = await getDebts();
 
         return res.json({
             status: 'success',
@@ -98,7 +153,8 @@ exports.getDashboard = async (req, res) => {
             biggestIncomeDate,
             categoryData,
             subCategoryData,
-            days
+            days,
+            debtSection
         })
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
@@ -111,7 +167,6 @@ exports.getBalance = async (req, res) => {
 
         return res.send({ status: 'success', balance, balanceMLC, balanceUSD, balanceUSDT })
     } catch (error) {
-        console.error('getBalance error:', error);
         return res.status(500).json({ code: error?.code, message: error?.message });
     }
 }
@@ -190,7 +245,6 @@ const checkDefaultTransactionValuesExists = async (categories, subCategories) =>
             category: categories.find(c => c?.name === i.category)?._id?.toString(),
             subCategory: subCategories.find(c => c?.name === i.subCategory)?._id?.toString()
         }))
-    console.log('***missingDTV:', missingDTV?.length)
     if (missingDTV?.length > 0)
         await dbFunctions.insertMany(dtvModel, missingDTV)
 }
@@ -199,7 +253,6 @@ const checkMissingItemExists = async (model, dataList, jsonValues = [], modelNam
     const existingNames = dataList.map(i => i?.[checkField])
 
     const missingItems = jsonValues.filter(i => !existingNames.includes(i?.[checkField]))
-    console.log(`***missing ${modelName}:`, missingItems.length)
     if (missingItems?.length > 0)
         if (modelName === 'users')
             for (let i = 0; i < missingItems.length; i++)
@@ -220,7 +273,6 @@ const checkSubCategoriesExists = async (categories, subCategories) => {
         const missingSubCategories = defaultSubCategories
             .filter(i => !subCategoryExists(categories, subCategories, i))
             .map(i => ({ ...i, category: categories.find(c => c?.name === i.category)?._id?.toString() }))
-        console.log('***missingSubCategories:', missingSubCategories?.length)
         if (missingSubCategories?.length > 0)
             await dbFunctions.insertMany(subCategoriesModel, missingSubCategories)
 
@@ -267,7 +319,6 @@ exports.addCreatedAt = async (req, res) => {
                 const id = temp?._id?.toString();
                 const created_at = moment(temp?.date).set({ milliseconds: index + 1 }).valueOf();
                 const updateResponse = await dbFunctions.updateOne(model, id, { created_at })
-                console.log('***temp', id, created_at, updateResponse?.created_at);
                 if (updateResponse)
                     response.push(updateResponse)
             }

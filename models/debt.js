@@ -15,6 +15,11 @@ const schema = new mongoose.Schema({
         min: 0,
         required: true
     },
+    paid: {
+        type: Number,
+        min: 0,
+        required: false
+    },
     type: {
         type: String,
         required: true,
@@ -31,6 +36,11 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
         default: 'cash'
+    },
+    isCompleted: {
+        type: Boolean,
+        required: false,
+        default: false
     },
     created_at: {
         type: Number,
