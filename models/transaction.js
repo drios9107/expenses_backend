@@ -44,6 +44,11 @@ const schema = new mongoose.Schema({
         ref: 'recurrentTransaction',
         required: false
     },
+    debtId: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'debt',
+        required: false
+    },
     created_at: {
         type: Number,
         default: Date.now(),
