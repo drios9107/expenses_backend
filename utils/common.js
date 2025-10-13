@@ -31,6 +31,63 @@ exports.getIlikeSearch = (searchTerm = '') => {
     return { $regex: searchTerm?.toString(), $options: 'i' }
 }
 
+const getProperDebtCategory = (list = [], condition) => {
+    const name = condition ? 'Ingresos' : 'Otros';
+    return list.find(i => i?.name === name)?._id?.toString()
+}
+
+const getProperDebtSubCategory = (list = [], condition, categoryId) => {
+    const name = condition ? 'Préstamos' : 'Devolución de Préstamos';
+    return list.find(i => i?.name === name && i?.category?.toString() === categoryId?.toString())?._id?.toString()
+}
+
+exports.generateDebtTransactions = (debt, categories = [], subCategories = [], debtId) => {
+    const {
+        amount,
+        type,
+        description,
+        date,
+        isMyDebt,
+        isCompleted
+    } = debt;
+
+    const commonPayload = {
+        amount,
+        type,
+        description,
+        date,
+        isRecurrent: false,
+        debtId
+    };
+
+    const transactions = [];
+
+    const category1 = getProperDebtCategory(categories, isMyDebt);
+    const subCategory1 = getProperDebtSubCategory(subCategories, true, category1); // 'Préstamos'
+
+    transactions.push({
+        ...commonPayload,
+        category: category1,
+        subCategory: subCategory1,
+        isExpense: !isMyDebt,
+    });
+
+    if (isCompleted) {
+        const category2 = getProperDebtCategory(categories, !isMyDebt);
+        const subCategory2 = getProperDebtSubCategory(subCategories, false, category2); // 'Devolución de Préstamos'
+
+        transactions.push({
+            ...commonPayload,
+            category: category2,
+            subCategory: subCategory2,
+            isExpense: isMyDebt,
+        });
+    }
+
+    return transactions;
+}
+
+
 const getTransactionsTotal = async (type, isExpense) => {
     const groupBy = {
         $group: {
