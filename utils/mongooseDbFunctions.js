@@ -21,39 +21,40 @@ exports.searchWithSkip = (model, { search = {}, restrictSearch = {}, sort = {}, 
         })
 }
 
-exports.find = (model, { search = {}, restrictSearch = {}, sort = {}, populate = [] } = {}) => {
-    return model.find(search, restrictSearch).sort(sort).populate(populate)
+exports.find = (model, { search = {}, restrictSearch = {}, sort = {}, populate = [], session = null } = {}) => {
+    return model.find(search, restrictSearch).sort(sort).populate(populate).session(session)
         .catch(error => {
             throw new Error(error)
-            // throw { ...(new Error("message")), code: 'default' }
         })
 }
 
-exports.findOne = (model, id, { restrictSearch = {}, sort = {}, populate = [] } = {}) => model.findById(id, restrictSearch).sort(sort).populate(populate).lean()
+exports.findOne = (model, id, { restrictSearch = {}, sort = {}, populate = [], session = null } = {}) => model.findById(id, restrictSearch).sort(sort).populate(populate).session(session).lean()
     .catch(error => {
         throw new Error(error)
     })
 
-exports.insertOne = (model, data, { populate = [] } = {}) => model.create({ ...data, created_at: moment().valueOf() })
+exports.insertOne = (model, data, { populate = [], session = null } = {}) => model.create({ ...data, created_at: moment().valueOf() }, { session })
     .then(res => res.populate(populate))
     .catch(error => {
         throw new Error(error)
     })
 
-exports.insertMany = (model, data) => model.insertMany(data)
+exports.insertMany = (model, data, { session = null } = {}) => model.insertMany(data, { session })
     .catch(error => {
         throw new Error(error)
     })
 
-exports.deleteOne = (model, id) => model
+exports.deleteOne = (model, id, { session = null } = {}) => model
     // .findByIdAndDelete(id)
     .deleteOne({ _id: id })
+    .session(session)
     .catch(error => {
         throw new Error(error)
     })
 
-exports.deleteMany = (model, search = {}) => model
+exports.deleteMany = (model, search = {}, { session = null } = {}) => model
     .deleteMany(search)
+    .session(session)
     .catch(error => {
         throw new Error(error)
     })

@@ -122,7 +122,7 @@ exports.getDashboard = async (req, res) => {
         const categoryData = { labels: Object.keys(result.category), values: Object.values(result.category) };
         const subCategoryData = { labels: Object.keys(result.subCategory)?.slice(0, 10), values: Object.values(result.subCategory)?.slice(0, 10) };
         const days = {}
-        Object.keys(result?.days ?? {}).sort().map(i => days[i] = result?.days?.[i] ?? []);
+        Object.keys(result?.days ?? {}).sort().forEach(i => days[i] = result?.days?.[i] ?? []);
 
         incomeTransactions = await getCurrentMonthIncomeTransactions(currentMonth, currentYear);
         if (currentMonthTransactions?.length === 0) {
