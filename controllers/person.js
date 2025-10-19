@@ -85,12 +85,13 @@ exports.update = async (req, res) => {
 
         if (req?.body?.user) {
             const person = await dbFunctions.findOne(model, req?.params?.id);
-            if (person.user && person.user !== req?.body?.user) {
+            if (person.user && person.user !== req.body.user) {
                 await Promise.all([
-                    dbFunctions.updateOne(userModel, person.user, { ...user, person: null }),
-                    dbFunctions.updateOne(userModel, req.body.user, { ...user, person: req?.params?.id })
+                    dbFunctions.updateOne(userModel, person.user, { ...person.user, person: null }),
+                    dbFunctions.updateOne(userModel, req.body.user, { ...person.user, person: req?.params?.id })
                 ])
             } else if (!person.user) {
+                const user = await dbFunctions.findOne(model, req.body.user);
                 await dbFunctions.updateOne(userModel, req.body.user, { ...user, person: req?.params?.id })
             }
         }
