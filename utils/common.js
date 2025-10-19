@@ -12,6 +12,10 @@ exports.populateRole = [
     { path: 'role', select: 'name _id' }
 ];
 
+exports.populateUser = [
+    { path: 'user', select: 'email _id' }
+];
+
 exports.populatePerson = [
     { path: 'person', select: 'name lastname _id' }
 ];
