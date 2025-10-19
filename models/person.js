@@ -9,6 +9,11 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    user: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'user',
+        required: false,
+    },
     created_at: {
         type: Number,
         default: Date.now(),
