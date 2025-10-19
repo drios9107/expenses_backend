@@ -17,6 +17,11 @@ const schema = new mongoose.Schema({
         default: 'user',
         messsage: 'required field'
     },
+    person: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'person',
+        required: false,
+    },
     created_at: {
         type: Number,
         default: Date.now(),
