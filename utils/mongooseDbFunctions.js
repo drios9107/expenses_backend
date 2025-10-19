@@ -33,7 +33,7 @@ exports.findOne = (model, id, { restrictSearch = {}, sort = {}, populate = [], s
         throw new Error(error)
     })
 
-exports.insertOne = (model, data, { populate = [], session = null } = {}) => model.create({ ...data, created_at: moment().valueOf() }, { session })
+exports.insertOne = (model, data, { populate = [], session = null } = {}) => model.create({ ...data, created_at: moment().valueOf() })
     .then(res => res.populate(populate))
     .catch(error => {
         throw new Error(error)

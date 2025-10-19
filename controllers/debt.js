@@ -3,7 +3,7 @@ const model = require("../models/debt");
 const transactionModel = require("../models/transaction");
 const categoryModel = require("../models/category");
 const subCategoryModel = require("../models/subCategory");
-const { sendCreateUpdateSuccessResponse, populatePerson, getIlikeSearch, getProperDebtCategoryOrSubCategory, getProperDebtSubCategory, getProperDebtCategory, generateDebtTransactions } = require("../utils/common");
+const { sendCreateUpdateSuccessResponse, populatePerson, getIlikeSearch, getProperDebtCategoryOrSubCategory, getProperDebtSubCategory, getProperDebtCategory, generateDebtTransactions, generateDebtCompletedTransaction } = require("../utils/common");
 const mongoose = require("mongoose");
 
 exports.getAll = async (req, res) => {
@@ -99,15 +99,45 @@ exports.delete = async (req, res) => {
 }
 
 exports.update = async (req, res) => {
-    try {
-        const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-        if (response?.status === 'error') {
+    try {
+        const debtId = req?.params?.id;
+        const response = await dbFunctions.updateOne(model, debtId, req?.body)
+
+        if (response?.status === 'error')
             return res.status(500).json(response)
+
+        if (req?.body?.isCompleted) {
+            const [categories, subCategories] = await Promise.all([
+                dbFunctions.find(categoryModel, { session, search: { $or: [{ name: getIlikeSearch('Ingresos') }, { name: getIlikeSearch('Otros') }] } }),
+                dbFunctions.find(subCategoryModel, { session, search: { $or: [{ name: getIlikeSearch('Préstamos') }, { name: getIlikeSearch('Devolución de Préstamos') }] } }),
+            ]);
+
+            const commonPayload = {
+                amount: req?.body?.amount,
+                type: req?.body?.type,
+                description: req?.body?.description,
+                date: req?.body?.date,
+                isRecurrent: false,
+                debtId
+            };
+
+            const data = [generateDebtCompletedTransaction(categories, req?.body?.isMyDebt, subCategories, commonPayload)];
+            const transactionResponse = await dbFunctions.insertMany(transactionModel, data, { session })
+
+            if (transactionResponse?.status === 'error')
+                return res.status(500).json(transactionResponse)
         }
+
+        await session.commitTransaction();
 
         return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populatePerson });
     } catch (err) {
+        await session.abortTransaction();
         return res.status(500).json({ status: 'error', message: err.message })
+    } finally {
+        await session.endSession();
     }
 }

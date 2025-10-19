@@ -41,6 +41,18 @@ const getProperDebtSubCategory = (list = [], condition, categoryId) => {
     return list.find(i => i?.name === name && i?.category?.toString() === categoryId?.toString())?._id?.toString()
 }
 
+exports.generateDebtCompletedTransaction = (categories = [], isMyDebt, subCategories = [], commonPayload = {}) => {
+    const category2 = getProperDebtCategory(categories, !isMyDebt);
+    const subCategory2 = getProperDebtSubCategory(subCategories, false, category2); // 'Devolución de Préstamos'
+
+    return {
+        ...commonPayload,
+        category: category2,
+        subCategory: subCategory2,
+        isExpense: isMyDebt,
+    };
+}
+
 exports.generateDebtTransactions = (debt, categories = [], subCategories = [], debtId) => {
     const {
         amount,
@@ -72,17 +84,8 @@ exports.generateDebtTransactions = (debt, categories = [], subCategories = [], d
         isExpense: !isMyDebt,
     });
 
-    if (isCompleted) {
-        const category2 = getProperDebtCategory(categories, !isMyDebt);
-        const subCategory2 = getProperDebtSubCategory(subCategories, false, category2); // 'Devolución de Préstamos'
-
-        transactions.push({
-            ...commonPayload,
-            category: category2,
-            subCategory: subCategory2,
-            isExpense: isMyDebt,
-        });
-    }
+    if (isCompleted)
+        transactions.push(this.generateDebtCompletedTransaction(categories, isMyDebt, subCategories, commonPayload));
 
     return transactions;
 }
