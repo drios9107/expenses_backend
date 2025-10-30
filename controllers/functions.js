@@ -21,15 +21,17 @@ const getPersonFullName = row => {
     if (row?.lastname)
         fullname += ` ${row?.lastname}`
 
-    return fullname?.trim();
+    return fullname?.trim() ?? 'fullname';
 }
 
-const getDebts = async () => {
+const getDebts = async (currentUserData) => {
     try {
         const items = await dbFunctions.find(debtsModel, { search: { isCompleted: false }, sort: { date: -1 }, populate: populatePerson });
 
         if (items?.length === 0)
             return [];
+
+        const currentUser = await dbFunctions.findOne(usersModel, currentUserData?._id?.toString(), { populate: populatePerson });
 
         const data = []
         items.forEach(d => {
@@ -37,8 +39,8 @@ const getDebts = async () => {
             if (dataIndex === -1) {
                 data.push({
                     person: {
-                        _id: d?.person?._id,
-                        name: getPersonFullName(d?.person),
+                        _id: d?.isMyDebt ? currentUser?.id ?? 'user' : d?.person?._id,
+                        name: getPersonFullName(d?.isMyDebt ? currentUser?.person ?? 'User' : d?.person),
                     },
                     debts: {
                         [d?.type]: parseFloat(d?.amount ?? 0) - parseFloat(d?.paid ?? 0)
@@ -60,7 +62,7 @@ const getDebts = async () => {
 
         return data;
     } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
+        throw new Error(err.message)
     }
 }
 
@@ -143,7 +145,7 @@ exports.getDashboard = async (req, res) => {
         biggestIncomeDate = incomeTransactions?.[0]?.date;
         incomeTransactions.forEach(i => monthIncome += i?.amount);
 
-        const debtSection = await getDebts();
+        const debtSection = await getDebts(req?.userData);
 
         return res.json({
             status: 'success',

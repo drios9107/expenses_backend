@@ -17,6 +17,7 @@ exports.verifyToken = async (req, res, next) => {
             if (!tokenIsValid)
                 return res.status(401).json({ code: 'invalid-token', message: 'Access denied' });
 
+            req.userData = tokenIsValid;
             return next();
         }
     } catch (err) {
