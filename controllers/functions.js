@@ -14,7 +14,7 @@ const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 const dtvJson = require("../utils/default/transactionDefaultValues.json")
 
-const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory, createUser, populatePerson, currentMonthSearch, emptyDataForCharts } = require("../utils/common")
+const { getCurrentMonthTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory, createUser, populatePerson, currentMonthSearch, emptyDataForCharts } = require("../utils/common")
 
 const getPersonFullName = row => {
     let fullname = row?.name;
