@@ -207,9 +207,15 @@ exports.getDashboard = async (req, res) => {
             res.status(400).json({ status: 'error', message: 'Missing params' })
 
         const search = currentMonthSearch(currentMonth, currentYear);
-        const { category: categoryData = { ...emptyDataForCharts }, subCategory: subCategoryData = { ...emptyDataForCharts } } = await getCategoryAndSubcategoryChartData(search)
-        const { monthExpenses = 0, monthIncome = 0, biggestIncome = 0, biggestIncomeDate = null } = await getExpensesAndIncomesCounters(search)
-        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, { replaceFields: true, showAll: false, sort: { amount: -1 } });
+        const [
+            { category: categoryData = { ...emptyDataForCharts }, subCategory: subCategoryData = { ...emptyDataForCharts } },
+            { monthExpenses = 0, monthIncome = 0, biggestIncome = 0, biggestIncomeDate = null },
+            currentMonthTransactions = []
+        ] = await Promise.all([
+            getCategoryAndSubcategoryChartData(search),
+            getExpensesAndIncomesCounters(search),
+            getCurrentMonthTransactions(currentMonth, currentYear, { replaceFields: true, showAll: false, sort: { amount: -1 } })
+        ])
 
         if (currentMonthTransactions?.length === 0) {
             return res.json({
@@ -245,21 +251,6 @@ exports.getDashboard = async (req, res) => {
 
         const days = {}
         Object.keys(result ?? {}).sort().forEach(i => days[i] = result?.[i] ?? []);
-
-        if (currentMonthTransactions?.length === 0) {
-            return res.json({
-                status: 'success',
-                monthExpenses,
-                monthIncome: 0,
-                biggestIncome,
-                biggestIncomeDate,
-                categoryData,
-                subCategoryData,
-                days,
-                debtSection: []
-            })
-        }
-
 
         const debtSection = await getDebts(req?.userData);
 
