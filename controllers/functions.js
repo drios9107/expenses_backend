@@ -246,7 +246,6 @@ exports.getDashboard = async (req, res) => {
         const days = {}
         Object.keys(result ?? {}).sort().forEach(i => days[i] = result?.[i] ?? []);
 
-        incomeTransactions = await getCurrentMonthIncomeTransactions(currentMonth, currentYear);
         if (currentMonthTransactions?.length === 0) {
             return res.json({
                 status: 'success',
