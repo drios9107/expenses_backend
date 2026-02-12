@@ -14,7 +14,7 @@ const defaultCategories = require("../utils/default/categories.json")
 const defaultSubCategories = require("../utils/default/subCategories.json")
 const dtvJson = require("../utils/default/transactionDefaultValues.json")
 
-const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory, createUser, populatePerson } = require("../utils/common")
+const { getCurrentMonthTransactions, getCurrentMonthIncomeTransactions, getAllBalance, getIlikeSearch, populateCategoryAndSubCategory, createUser, populatePerson, currentMonthSearch, emptyDataForCharts } = require("../utils/common")
 
 const getPersonFullName = row => {
     let fullname = row?.name;
@@ -66,7 +66,139 @@ const getDebts = async (currentUserData) => {
     }
 }
 
+/**
+ * Formats the list as an object containing labels and values
+ * @param {[]} list 
+ * @returns Object containing labels and values for charts
+ */
+const formatLabelAndValue = (list = []) => {
+    const items = { ...emptyDataForCharts }
 
+    list.forEach(c => {
+        items.labels = [...items.labels, c._id]
+        items.values = [...items.values, c.totalAmount]
+    })
+
+    return items
+}
+
+/**
+ * Returns the amount of checks that are verified, calibrated and can be used for the given search criteria
+ * @param {*} search 
+ * @returns Object containing each check boolean counter
+ */
+const getCategoryAndSubcategoryChartData = async (search) => {
+    const result = await transactionsModel.aggregate([
+        { $match: { ...search, isExpense: true } },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        { $unwind: "$category" },
+        {
+            $lookup: {
+                from: "subcategories",
+                localField: "subCategory",
+                foreignField: "_id",
+                as: "subCategory"
+            }
+        },
+        { $unwind: "$subCategory" },
+        {
+            $facet: {
+                category: [
+                    {
+                        $group: {
+                            _id: "$category.name",
+                            totalAmount: { $sum: "$amount" }
+                        },
+                    },
+                    { $sort: { totalAmount: -1 } }
+                ],
+                subCategory: [
+                    {
+                        $group: {
+                            _id: {
+                                subCategory: "$subCategory.name",
+                                category: "$category.name"
+                            },
+                            totalAmount: { $sum: "$amount" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: {
+                                $cond: [
+                                    { $ifNull: ["$_id.subCategory", false] },
+                                    { $concat: ["$_id.subCategory", ":", "$_id.category"] },
+                                    "$_id.category"
+                                ]
+                            },
+                            totalAmount: 1
+                        }
+                    },
+                    { $sort: { totalAmount: -1 } },
+                    { $limit: 10 }
+                ]
+            }
+        }
+    ]);
+
+    return {
+        category: formatLabelAndValue(result[0].category),
+        subCategory: formatLabelAndValue(result[0].subCategory)
+    };
+};
+
+
+/**
+ * Returns the amount of money for expenses and income transactions for the given search criteria
+ * @param {*} search 
+ * @returns Object containing the amount of money for expenses and income transactions, 
+ * also the biggest income transaction and the date it was made 
+ */
+const getExpensesAndIncomesCounters = async (search) => {
+    const results = await transactionsModel.aggregate([
+        { $match: search },
+        {
+            $facet: {
+                totals: [
+                    {
+                        $group: {
+                            _id: null,
+                            monthExpenses: {
+                                $sum: { $cond: ["$isExpense", "$amount", 0] }
+                            },
+                            monthIncome: {
+                                $sum: { $cond: ["$isExpense", 0, "$amount"] }
+                            }
+                        }
+                    }
+                ],
+                biggestIncomeDoc: [
+                    { $match: { isExpense: false } },
+                    { $sort: { amount: -1 } },
+                    { $limit: 1 },
+                    { $project: { _id: 0, amount: 1, date: 1 } }
+                ]
+            }
+        },
+        {
+            $project: {
+                monthExpenses: { $arrayElemAt: ["$totals.monthExpenses", 0] },
+                monthIncome: { $arrayElemAt: ["$totals.monthIncome", 0] },
+                biggestIncome: { $arrayElemAt: ["$biggestIncomeDoc.amount", 0] },
+                biggestIncomeDate: { $arrayElemAt: ["$biggestIncomeDoc.date", 0] }
+            }
+        }
+    ]);
+
+    return results[0] ?? {};
+};
 
 exports.getDashboard = async (req, res) => {
     try {
@@ -74,8 +206,10 @@ exports.getDashboard = async (req, res) => {
         if (isNaN(currentMonth) || !currentYear)
             res.status(400).json({ status: 'error', message: 'Missing params' })
 
-        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear);
-        let monthExpenses = 0, monthIncome = 0, biggestIncome = 0, biggestIncomeDate = null;
+        const search = currentMonthSearch(currentMonth, currentYear);
+        const { category: categoryData = { ...emptyDataForCharts }, subCategory: subCategoryData = { ...emptyDataForCharts } } = await getCategoryAndSubcategoryChartData(search)
+        const { monthExpenses = 0, monthIncome = 0, biggestIncome = 0, biggestIncomeDate = null } = await getExpensesAndIncomesCounters(search)
+        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, { replaceFields: true, showAll: false, sort: { amount: -1 } });
 
         if (currentMonthTransactions?.length === 0) {
             return res.json({
@@ -84,26 +218,19 @@ exports.getDashboard = async (req, res) => {
                 monthIncome: 0,
                 biggestIncome,
                 biggestIncomeDate,
-                categoryData: { labels: [], values: [] },
-                subCategoryData: { labels: [], values: [] },
+                categoryData: { ...emptyDataForCharts },
+                subCategoryData: { ...emptyDataForCharts },
                 days: {},
                 debtSection: []
             })
         }
 
-        const result = await currentMonthTransactions.reduce(async (acc, item) => {
-            const category = await dbFunctions.findOne(categoriesModel, item?.category?._id)
-            const categoryName = category?.name;
+        const result = currentMonthTransactions.reduce((acc, item) => {
+            const categoryName = item.category;
 
-            const subCategory = item?.subCategory ?
-                await dbFunctions.findOne(subCategoriesModel, item?.subCategory?._id) :
-                { name: categoryName };
+            const subCategory = { name: item?.subCategory ?? categoryName }
             const subCategoryName = `${subCategory?.name}:${categoryName}`;
 
-            const stacked = await acc;
-            const stackedCategory = stacked?.category;
-            const stackedSubCategory = stacked?.subCategory;
-            const stackedDays = stacked?.days;
             const dayName = moment(item?.date).format('YYYY-MM-DD');
             const dayValue = {
                 date: item?.date,
@@ -112,19 +239,12 @@ exports.getDashboard = async (req, res) => {
                 amount: item?.amount ?? 0,
                 description: item?.description
             }
-            monthExpenses += item.amount;
 
-            return ({
-                days: { ...stackedDays, [dayName]: [...(stacked?.days?.[dayName] ?? []), dayValue] },
-                category: { ...stackedCategory, [categoryName]: (stacked?.category?.[categoryName] ?? 0) + item.amount },
-                subCategory: { ...stackedSubCategory, [subCategoryName]: (stacked?.subCategory?.[subCategoryName] ?? 0) + item.amount }
-            })
+            return ({ ...acc, [dayName]: [...(acc?.[dayName] ?? []), dayValue] })
         }, Promise.resolve([]))
 
-        const categoryData = { labels: Object.keys(result.category), values: Object.values(result.category) };
-        const subCategoryData = { labels: Object.keys(result.subCategory)?.slice(0, 10), values: Object.values(result.subCategory)?.slice(0, 10) };
         const days = {}
-        Object.keys(result?.days ?? {}).sort().forEach(i => days[i] = result?.days?.[i] ?? []);
+        Object.keys(result ?? {}).sort().forEach(i => days[i] = result?.[i] ?? []);
 
         incomeTransactions = await getCurrentMonthIncomeTransactions(currentMonth, currentYear);
         if (currentMonthTransactions?.length === 0) {
@@ -141,9 +261,6 @@ exports.getDashboard = async (req, res) => {
             })
         }
 
-        biggestIncome = incomeTransactions?.[0]?.amount ?? 0;
-        biggestIncomeDate = incomeTransactions?.[0]?.date;
-        incomeTransactions.forEach(i => monthIncome += i?.amount);
 
         const debtSection = await getDebts(req?.userData);
 

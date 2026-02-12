@@ -123,6 +123,8 @@ exports.createUser = async (req) => {
     return dbFunctions.insertOne(userModel, { ...req?.body, password: hash });
 }
 
+exports.emptyDataForCharts = { labels: [], values: [] }
+
 exports.getBalanceFunction = async (type = 'cup') => {
     try {
         const [income, expense] = await Promise.all([getTransactionsTotal(type, false), getTransactionsTotal(type, true)]);
@@ -152,7 +154,13 @@ exports.getAllBalance = async () => {
     }
 }
 
-const currentMonthSearch = (currentMonth, currentYear) => {
+/**
+ * Returns the object search filtering by a given month and year
+ * @param {*} currentMonth 
+ * @param {*} currentYear 
+ * @returns Search object
+ */
+exports.currentMonthSearch = (currentMonth, currentYear) => {
     const currentMonthFirstDay = moment().set({ D: 1, M: currentMonth, y: currentYear, h: 0, m: 0, s: 0, milliseconds: 0 }).valueOf();
     const nextMonthFirstDay = moment(currentMonthFirstDay).add(1, 'month').valueOf();
     const search = {
@@ -164,8 +172,14 @@ const currentMonthSearch = (currentMonth, currentYear) => {
     return search;
 }
 
+/**
+ * Returns a list of income transactions by a given month and year
+ * @param {number} currentMonth 
+ * @param {number} currentYear 
+ * @returns List of transactions
+ */
 exports.getCurrentMonthIncomeTransactions = async (currentMonth, currentYear) => {
-    const search = currentMonthSearch(currentMonth, currentYear);
+    const search = this.currentMonthSearch(currentMonth, currentYear);
     search['isExpense'] = false
     search['type'] = 'cup'
 
@@ -173,8 +187,15 @@ exports.getCurrentMonthIncomeTransactions = async (currentMonth, currentYear) =>
     return currentMonthTransactions;
 }
 
+/**
+ * This function returns a list of transactions by a given month and year
+ * @param {number} currentMonth 
+ * @param {number} currentYear 
+ * @param {Object} options Filtering and sorting options (sort, showAll, replaceFields, categoryId, subCategoryId)
+ * @returns List of transactions
+ */
 exports.getCurrentMonthTransactions = async (currentMonth, currentYear, options = { sort: null, showAll: false, replaceFields: false, categoryId: null, subCategoryId: null }) => {
-    const search = currentMonthSearch(currentMonth, currentYear);
+    const search = this.currentMonthSearch(currentMonth, currentYear);
 
     let sort = { amount: -1 };
     if (!options?.showAll) {
