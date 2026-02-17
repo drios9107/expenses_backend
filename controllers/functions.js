@@ -359,15 +359,19 @@ const checkDefaultTransactionValuesExists = async (categories, subCategories) =>
 }
 
 const checkMissingItemExists = async (model, dataList, jsonValues = [], modelName, checkField = 'name') => {
-    const existingNames = dataList.map(i => i?.[checkField])
+    try {
+        const existingNames = dataList.map(i => i?.[checkField])
 
-    const missingItems = jsonValues.filter(i => !existingNames.includes(i?.[checkField]))
-    if (missingItems?.length > 0)
-        if (modelName === 'users')
-            for (let i = 0; i < missingItems.length; i++)
-                await createUser({ body: missingItems[i] })
-        else
-            await dbFunctions.insertMany(model, missingItems)
+        const missingItems = jsonValues.filter(i => !existingNames.includes(i?.[checkField]))
+        if (missingItems?.length > 0)
+            if (modelName === 'users')
+                for (let i = 0; i < missingItems.length; i++)
+                    await createUser({ body: missingItems[i] })
+            else
+                await dbFunctions.insertMany(model, missingItems)
+    } catch (e) {
+        console.log('***error', e)
+    }
 }
 
 const subCategoryExists = (categories, subCategories, item) => {
@@ -385,7 +389,7 @@ const checkSubCategoriesExists = async (categories, subCategories) => {
         if (missingSubCategories?.length > 0)
             await dbFunctions.insertMany(subCategoriesModel, missingSubCategories)
 
-        checkDefaultTransactionValuesExists(categories, subCategories);
+        await checkDefaultTransactionValuesExists(categories, subCategories);
     }
 }
 
@@ -402,7 +406,7 @@ exports.callFirstRun = async () => {
             dbFunctions.find(subCategoriesModel)
         ]);
         if (updatedCategories && subCategories)
-            checkSubCategoriesExists(updatedCategories, subCategories);
+            await checkSubCategoriesExists(updatedCategories, subCategories);
     }
 
     await checkMissingItemExists(rolesModel, roles, defaultRoles, 'roles');
