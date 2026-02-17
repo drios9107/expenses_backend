@@ -6,5 +6,5 @@ mongoose.connect(process.env.MONGO_DB_URL, { dbName: 'expensesDB' })
         console.log('***connected through mongoose')
         callFirstRun();
     })
-    .catch(error => console.log('***error', error))
+    .catch(error => console.log('***error', error.message))
 
