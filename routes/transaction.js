@@ -6,6 +6,7 @@ router.get('/currentMonth', transactionController.getCurrentMonth)
 router.post('/search', transactionController.search)
 router.post('/simple-search', transactionController.simpleSearch)
 router.post('/aggregation-search', transactionController.aggregationSearch)
+router.post('/create-many', transactionController.createMany)
 
 router
     .route('/:id')

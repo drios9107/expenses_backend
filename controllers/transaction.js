@@ -465,6 +465,18 @@ exports.create = [handleCategories, async (req, res) => {
     }
 }]
 
+exports.createMany = async (req, res) => {
+    try {
+        const response = await dbFunctions.insertMany(model, req?.body)
+        if (response?.status === 'error')
+            return res.status(500).res.json(response)
+
+        return res.status(200).json({ status: 'success' })
+    } catch (err) {
+        return res.status(500).json({ status: 'error', message: err.message })
+    }
+}
+
 exports.delete = async (req, res) => {
     try {
         // const transactionData = await dbFunctions.findOne(model, req?.params?.id)
