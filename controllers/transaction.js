@@ -475,8 +475,8 @@ exports.createMany = async (req, res) => {
         for (let i = 0; i < req.body.length; i++) {
             const line = req.body[i];
             const [c, s] = await Promise.all([
-                dbFunctions.find(categories, { search: { name: line.category } }),
-                dbFunctions.find(subCategories, { search: { name: line.subcategory } })
+                dbFunctions.find(categories, { search: { name: getIlikeSearch(line.category) } }),
+                dbFunctions.find(subCategories, { search: { name: getIlikeSearch(line.subcategory) } })
             ])
             if (c.length === 0)
                 return res.status(400).json({ status: 'error', code: 'category_not_found_in_line', index: i + 1 })

@@ -204,7 +204,11 @@
         "category": "Comida"
     },
     {
-        "name": "Refrescos",
+        "name": "Paquete de Perros",
+        "category": "Comida"
+    },
+    {
+        "name": "Bebidas",
         "category": "Comida"
     },
     {
