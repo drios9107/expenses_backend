@@ -1,4 +1,5 @@
-[{
+[
+    {
         "name": "Agua",
         "category": "Comida"
     },
@@ -112,6 +113,10 @@
     },
     {
         "name": "Bicicleta",
+        "category": "Transporte"
+    },
+    {
+        "name": "Bicimoto",
         "category": "Transporte"
     },
     {

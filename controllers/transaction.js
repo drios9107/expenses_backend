@@ -467,9 +467,28 @@ exports.create = [handleCategories, async (req, res) => {
 
 exports.createMany = async (req, res) => {
     try {
-        const response = await dbFunctions.insertMany(model, req?.body)
+        const isMissingDataInIndex = req.body.findIndex(i => !i.date || !i.category || !i.subCategory || !i.amount || !i.description)
+        if (isMissingDataInIndex)
+            return res.status(400).json({ status: 'error', code: 'missing_data_in_line' })
+
+        const data = []
+        for (let i = 0; i < req.body.length; i++) {
+            const line = req.body[i];
+            const [c, s] = await Promise.all([
+                dbFunctions.find(categories, { search: { name: line.category } }),
+                dbFunctions.find(subCategories, { search: { name: line.subcategory } })
+            ])
+            if (c.length === 0)
+                return res.status(400).json({ status: 'error', code: 'category_not_found_in_line', index: i + 1 })
+            if (s.length === 0)
+                return res.status(400).json({ status: 'error', code: 'subcategory_not_found_in_line', index: i + 1 })
+
+            data.push({ ...line, category: c[0]._id, subCategory: s[0]._id, })
+        }
+
+        const response = await dbFunctions.insertMany(model, data)
         if (response?.status === 'error')
-            return res.status(500).res.json(response)
+            return res.status(500).json(response)
 
         return res.status(200).json({ status: 'success' })
     } catch (err) {
