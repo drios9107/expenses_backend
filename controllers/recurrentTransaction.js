@@ -39,9 +39,9 @@ exports.getDetails = async (req, res) => {
 
 exports.create = [handleCategories, async (req, res) => {
     try {
-        const recurrentTransactionResponse = await dbFunctions.insertOne(model, req.body);
-        if (recurrentTransactionResponse?.status === 'error') {
-            return res.status(500).json(recurrentTransactionResponse)
+        const response = await dbFunctions.insertOne(model, req.body);
+        if (response?.status === 'error') {
+            return res.status(500).json(response)
         }
 
         return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populateCategoryAndSubCategory });
