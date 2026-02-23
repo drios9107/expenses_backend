@@ -2,7 +2,7 @@ const dbFunctions = require("../utils/mongooseDbFunctions")
 const model = require("../models/transaction");
 const categories = require("../models/category");
 const subCategories = require("../models/subCategory");
-const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch, populateCategoryAndSubCategory } = require("../utils/common");
+const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch, populateCategoryAndSubCategory, generateAdvancedSearchResponse } = require("../utils/common");
 const moment = require('moment')
 const handleCategories = require("../utils/categoryHandlers");
 
@@ -147,8 +147,6 @@ exports.simpleSearch = async (req, res) => {
  */
 exports.search = async (req, res) => {
     try {
-        const search = {}
-
         const {
             searchTerm,
             limit = 50,
@@ -158,15 +156,6 @@ exports.search = async (req, res) => {
             isExpense,
             isRecurrent,
         } = req?.body;
-
-        const properDirection = paginationToken?.direction === 'previous' ?
-            (sortDirection === 'desc' ? 1 : -1) :
-            (sortDirection === 'desc' ? -1 : 1);
-
-        const sort = {
-            [sortField]: properDirection,
-            created_at: properDirection
-        };
 
         const and = [];
         if (typeof (isExpense) !== 'undefined')
@@ -201,66 +190,17 @@ exports.search = async (req, res) => {
             and.push({ $or: or });
         }
 
-        if (paginationToken) {
-            and.push({
-                $or: paginationToken.direction === 'previous' ?
-                    [
-                        {
-                            [sortField]: {
-                                [sortDirection === 'desc' ? '$gt' : '$lt']: paginationToken.firstSortValue
-                            }
-                        },
-                        {
-                            [sortField]: paginationToken.firstSortValue,
-                            created_at: { $gt: paginationToken.firstCreatedAt }
-                        }
-                    ] :
-                    [
-                        {
-                            [sortField]: {
-                                [sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
-                            }
-                        },
-                        {
-                            [sortField]: paginationToken.lastSortValue,
-                            created_at: { $lt: paginationToken.lastCreatedAt }
-                        }
-                    ]
-            });
-        }
-
-        search.$and = and;
-        const transactions = await dbFunctions.search(model, { search, sort, limit: limit + 1, populate: populateCategoryAndSubCategory });
-        const total = await dbFunctions.count(model, search);
-
-        let hasMore = transactions.length > limit;
-        const isFirstSearch = !paginationToken;
-        let resultTransactions = hasMore ? transactions.slice(0, -1) : transactions;
-        if (paginationToken?.direction === 'previous') {
-            resultTransactions = resultTransactions.reverse();
-            hasMore = true;
-        }
-        const amount = resultTransactions?.length;
-
-        const firstTransaction = resultTransactions[0];
-        const lastTransaction = resultTransactions[resultTransactions.length - 1];
-
-        return res.json({
-            status: 'success',
-            data: resultTransactions,
-            total,
-            length: amount,
-            nextPageToken: hasMore ? {
-                lastSortValue: lastTransaction[sortField],
-                lastCreatedAt: lastTransaction.created_at,
-                direction: 'next'
-            } : null,
-            previousPageToken: !isFirstSearch ? {
-                firstSortValue: firstTransaction[sortField],
-                firstCreatedAt: firstTransaction.created_at,
-                direction: 'previous'
-            } : null
+        const response = await generateAdvancedSearchResponse({
+            paginationToken,
+            sortDirection,
+            sortField,
+            and,
+            model,
+            limit,
+            populate: populateCategoryAndSubCategory
         })
+
+        return res.json(response);
     } catch (err) {
         return res.status(500).json({ status: 'error', message: err.message })
     }
@@ -483,7 +423,7 @@ exports.createMany = async (req, res) => {
             if (s.length === 0)
                 return res.status(400).json({ status: 'error', code: 'subcategory_not_found_in_line', index: i + 1 })
 
-            data.push({ ...line, category: c[0]._id, subCategory: s[0]._id, })
+            data.push({ ...line, created_at: line.date, category: c[0]._id, subCategory: s[0]._id, })
         }
 
         const response = await dbFunctions.insertMany(model, data)

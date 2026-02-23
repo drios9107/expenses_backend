@@ -397,3 +397,86 @@ exports.removeUnnecessarySubcategories = async () => {
         console.error('Deletion failed:', error);
     }
 }
+
+exports.generateAdvancedSearchResponse = async ({
+    paginationToken,
+    sortDirection,
+    sortField,
+    and,
+    model,
+    limit,
+    populate
+}) => {
+    const search = {}
+    const originalSearch = { $and: [...and] }
+
+    const properDirection = paginationToken?.direction === 'previous' ?
+        (sortDirection === 'desc' ? 1 : -1) :
+        (sortDirection === 'desc' ? -1 : 1);
+
+    const sort = {
+        [sortField]: properDirection,
+        created_at: properDirection
+    };
+
+    if (paginationToken) {
+        and.push({
+            $or: paginationToken.direction === 'previous' ?
+                [
+                    {
+                        [sortField]: {
+                            [sortDirection === 'desc' ? '$gt' : '$lt']: paginationToken.firstSortValue
+                        }
+                    },
+                    {
+                        [sortField]: paginationToken.firstSortValue,
+                        created_at: { $gt: paginationToken.firstCreatedAt }
+                    }
+                ] :
+                [
+                    {
+                        [sortField]: {
+                            [sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
+                        }
+                    },
+                    {
+                        [sortField]: paginationToken.lastSortValue,
+                        created_at: { $lt: paginationToken.lastCreatedAt }
+                    }
+                ]
+        });
+    }
+
+    search.$and = and;
+    const items = await dbFunctions.search(model, { search, sort, limit: limit + 1, populate });
+    const total = await dbFunctions.count(model, originalSearch);
+
+    let hasMore = items.length > limit;
+    const isFirstSearch = !paginationToken;
+    let resultItems = hasMore ? items.slice(0, -1) : items;
+    if (paginationToken?.direction === 'previous') {
+        resultItems = resultItems.reverse();
+        hasMore = true;
+    }
+    const amount = resultItems?.length;
+
+    const firstItem = resultItems[0];
+    const lastItem = resultItems[resultItems.length - 1];
+
+    return {
+        status: 'success',
+        data: resultItems,
+        total,
+        length: amount,
+        nextPageToken: hasMore ? {
+            lastSortValue: lastItem[sortField],
+            lastCreatedAt: lastItem.created_at,
+            direction: 'next'
+        } : null,
+        previousPageToken: !isFirstSearch ? {
+            firstSortValue: firstItem[sortField],
+            firstCreatedAt: firstItem.created_at,
+            direction: 'previous'
+        } : null
+    }
+}
