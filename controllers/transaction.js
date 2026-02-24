@@ -1,72 +1,90 @@
-const dbFunctions = require("../utils/mongooseDbFunctions")
-const model = require("../models/transaction");
-const categories = require("../models/category");
-const subCategories = require("../models/subCategory");
-const { getCurrentMonthTransactions, sendCreateUpdateSuccessResponse, handleDateSearchTerm, getIlikeSearch, populateCategoryAndSubCategory, generateAdvancedSearchResponse } = require("../utils/common");
+const dbFunctions = require('../utils/mongooseDbFunctions')
+const model = require('../models/transaction')
+const categories = require('../models/category')
+const subCategories = require('../models/subCategory')
+const {
+	getCurrentMonthTransactions,
+	sendCreateUpdateSuccessResponse,
+	handleDateSearchTerm,
+	getIlikeSearch,
+	populateCategoryAndSubCategory,
+	generateAdvancedSearchResponse
+} = require('../utils/common')
 const moment = require('moment')
-const handleCategories = require("../utils/categoryHandlers");
+const handleCategories = require('../utils/categoryHandlers')
 
 exports.getTransactionsByCategory = async (req, res) => {
-    try {
-        const { currentMonth, currentYear, categoryName } = req.params;
-        if (isNaN(currentMonth) || !currentYear || !categoryName)
-            return res.status(400).json({ status: 'error', message: 'Missing params' })
+	try {
+		const { currentMonth, currentYear, categoryName } = req.params
+		if (isNaN(currentMonth) || !currentYear || !categoryName)
+			return res.status(400).json({ status: 'error', message: 'Missing params' })
 
-        const category = await dbFunctions.find(categories, { search: { name: decodeURIComponent(categoryName) } })
-        if (category.length === 0)
-            return res.status(404).json({ status: 'error', message: 'category-not-found' })
+		const category = await dbFunctions.find(categories, { search: { name: decodeURIComponent(categoryName) } })
+		if (category.length === 0) return res.status(404).json({ status: 'error', message: 'category-not-found' })
 
-        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, { categoryId: category[0]._id, replaceFields: true, sort: { date: -1, amount: -1 } });
-        return res.json({
-            status: 'success',
-            data: currentMonthTransactions
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, {
+			categoryId: category[0]._id,
+			replaceFields: true,
+			sort: { date: -1, amount: -1 }
+		})
+		return res.json({
+			status: 'success',
+			data: currentMonthTransactions
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 exports.getTransactionsByCategoryAndSubCategory = async (req, res) => {
-    try {
-        const { currentMonth, currentYear, categoryName, subCategoryName } = req.params;
-        if (isNaN(currentMonth) || !currentYear || !categoryName || !subCategoryName)
-            return res.status(400).json({ status: 'error', message: 'Missing params' })
+	try {
+		const { currentMonth, currentYear, categoryName, subCategoryName } = req.params
+		if (isNaN(currentMonth) || !currentYear || !categoryName || !subCategoryName)
+			return res.status(400).json({ status: 'error', message: 'Missing params' })
 
-        const category = await dbFunctions.find(categories, { search: { name: decodeURIComponent(categoryName) } })
-        if (category.length === 0)
-            return res.status(404).json({ status: 'error', message: 'category-not-found' })
+		const category = await dbFunctions.find(categories, { search: { name: decodeURIComponent(categoryName) } })
+		if (category.length === 0) return res.status(404).json({ status: 'error', message: 'category-not-found' })
 
-        const categoryId = category[0]?._id?.toString();
+		const categoryId = category[0]?._id?.toString()
 
-        const subCategory = await dbFunctions.find(subCategories, { search: { name: decodeURIComponent(subCategoryName), category: categoryId } })
-        if (subCategory.length === 0)
-            return res.status(404).json({ status: 'error', message: 'subCategory-not-found' })
+		const subCategory = await dbFunctions.find(subCategories, {
+			search: { name: decodeURIComponent(subCategoryName), category: categoryId }
+		})
+		if (subCategory.length === 0) return res.status(404).json({ status: 'error', message: 'subCategory-not-found' })
 
-        const subCategoryId = subCategory[0]?._id?.toString();
+		const subCategoryId = subCategory[0]?._id?.toString()
 
-        const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, { subCategoryId, categoryId, replaceFields: true, sort: { date: -1, amount: -1 } });
-        return res.json({
-            status: 'success',
-            data: currentMonthTransactions
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		const currentMonthTransactions = await getCurrentMonthTransactions(currentMonth, currentYear, {
+			subCategoryId,
+			categoryId,
+			replaceFields: true,
+			sort: { date: -1, amount: -1 }
+		})
+		return res.json({
+			status: 'success',
+			data: currentMonthTransactions
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 exports.getCurrentMonth = async (req, res) => {
-    try {
-        const currentMonth = moment().get('M');
-        const currentYear = moment().get('Y');
-        const items = await getCurrentMonthTransactions(currentMonth, currentYear, { showAll: true, replaceFields: true });
+	try {
+		const currentMonth = moment().get('M')
+		const currentYear = moment().get('Y')
+		const items = await getCurrentMonthTransactions(currentMonth, currentYear, {
+			showAll: true,
+			replaceFields: true
+		})
 
-        return res.json({
-            status: 'success',
-            data: items
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			data: items
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 /**
@@ -81,57 +99,59 @@ exports.getCurrentMonth = async (req, res) => {
  * @returns Returns a transactions array in "data" property and the total amount of transactions in "total" property
  */
 exports.simpleSearch = async (req, res) => {
-    try {
-        const search = {}
+	try {
+		const search = {}
 
-        const {
-            searchTerm,
-            limit = 50,
-            page = 0,
-            sortField = 'created_at',
-            sortDirection = 'desc',
-            isExpense,
-            isRecurrent,
-        } = req?.body;
+		const {
+			searchTerm,
+			limit = 50,
+			page = 0,
+			sortField = 'created_at',
+			sortDirection = 'desc',
+			isExpense,
+			isRecurrent
+		} = req?.body
 
-        const sort = {
-            [sortField]: sortDirection === 'desc' ? -1 : 1,
-            created_at: sortDirection === 'desc' ? -1 : 1
-        };
+		const sort = {
+			[sortField]: sortDirection === 'desc' ? -1 : 1,
+			created_at: sortDirection === 'desc' ? -1 : 1
+		}
 
-        const and = [];
-        if (typeof (isExpense) !== 'undefined')
-            and.push({ isExpense })
+		const and = []
+		if (typeof isExpense !== 'undefined') and.push({ isExpense })
 
-        if (typeof (isRecurrent) !== 'undefined')
-            and.push({ isRecurrent })
+		if (typeof isRecurrent !== 'undefined') and.push({ isRecurrent })
 
-        if (searchTerm) {
-            let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
+		if (searchTerm) {
+			let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
 
-            if (!isNaN(searchTerm))
-                or.push({ amount: searchTerm })
+			if (!isNaN(searchTerm)) or.push({ amount: searchTerm })
 
-            if (searchTerm.toString().split('-').length === 3)
-                or = handleDateSearchTerm(searchTerm, or);
+			if (searchTerm.toString().split('-').length === 3) or = handleDateSearchTerm(searchTerm, or)
 
-            and.push({ $or: or });
-        }
+			and.push({ $or: or })
+		}
 
-        search.$and = and;
+		search.$and = and
 
-        const transactions = await dbFunctions.searchWithSkip(model, { search, sort, limit, page, populate: populateCategoryAndSubCategory });
-        const total = await dbFunctions.count(model);
+		const transactions = await dbFunctions.searchWithSkip(model, {
+			search,
+			sort,
+			limit,
+			page,
+			populate: populateCategoryAndSubCategory
+		})
+		const total = await dbFunctions.count(model)
 
-        return res.json({
-            status: 'success',
-            data: transactions,
-            length: transactions.length,
-            total
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			data: transactions,
+			length: transactions.length,
+			total
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 /**
@@ -146,64 +166,58 @@ exports.simpleSearch = async (req, res) => {
  * @returns Returns a transactions array in "data" property and the total amount of transactions in "total" property
  */
 exports.search = async (req, res) => {
-    try {
-        const {
-            searchTerm,
-            limit = 50,
-            paginationToken = null,
-            sortField = 'created_at',
-            sortDirection = 'desc',
-            isExpense,
-            isRecurrent,
-        } = req?.body;
+	try {
+		const {
+			searchTerm,
+			limit = 50,
+			paginationToken = null,
+			sortField = 'created_at',
+			sortDirection = 'desc',
+			isExpense,
+			isRecurrent
+		} = req?.body
 
-        const and = [];
-        if (typeof (isExpense) !== 'undefined')
-            and.push({ isExpense })
+		const and = []
+		if (typeof isExpense !== 'undefined') and.push({ isExpense })
 
-        if (typeof (isRecurrent) !== 'undefined')
-            and.push({ isRecurrent })
+		if (typeof isRecurrent !== 'undefined') and.push({ isRecurrent })
 
-        if (searchTerm) {
-            const nameSearch = { name: getIlikeSearch(searchTerm) }
-            const [categoriesData, subCategoriesData] = await Promise.all([
-                dbFunctions.find(categories, { search: nameSearch }),
-                dbFunctions.find(subCategories, { search: nameSearch })
-            ])
+		if (searchTerm) {
+			const nameSearch = { name: getIlikeSearch(searchTerm) }
+			const [categoriesData, subCategoriesData] = await Promise.all([
+				dbFunctions.find(categories, { search: nameSearch }),
+				dbFunctions.find(subCategories, { search: nameSearch })
+			])
 
-            let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
+			let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
 
-            const categoriesIds = categoriesData.map(i => i?._id);
-            if (categoriesIds.length > 0)
-                or.push({ category: { $in: categoriesIds } })
+			const categoriesIds = categoriesData.map(i => i?._id)
+			if (categoriesIds.length > 0) or.push({ category: { $in: categoriesIds } })
 
-            const subCategoriesIds = subCategoriesData.map(i => i?._id);
-            if (subCategoriesIds.length > 0)
-                or.push({ subCategory: { $in: subCategoriesIds } })
+			const subCategoriesIds = subCategoriesData.map(i => i?._id)
+			if (subCategoriesIds.length > 0) or.push({ subCategory: { $in: subCategoriesIds } })
 
-            if (!isNaN(searchTerm))
-                or.push({ amount: searchTerm })
+			if (!isNaN(searchTerm)) or.push({ amount: searchTerm })
 
-            if (searchTerm.toString().split('-').length === 3)
-                or = handleDateSearchTerm(searchTerm, or);
+			if (searchTerm.toString().split('-').length === 3) or = handleDateSearchTerm(searchTerm, or)
 
-            and.push({ $or: or });
-        }
+			and.push({ $or: or })
+		}
 
-        const response = await generateAdvancedSearchResponse({
-            paginationToken,
-            sortDirection,
-            sortField,
-            and,
-            model,
-            limit,
-            populate: populateCategoryAndSubCategory
-        })
+		const response = await generateAdvancedSearchResponse({
+			paginationToken,
+			sortDirection,
+			sortField,
+			and,
+			model,
+			limit,
+			populate: populateCategoryAndSubCategory
+		})
 
-        return res.json(response);
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json(response)
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 /**
@@ -218,250 +232,257 @@ exports.search = async (req, res) => {
  * @returns Returns a transactions array in "data" property and the total amount of transactions in "total" property
  */
 exports.aggregationSearch = async (req, res) => {
-    try {
-        const {
-            searchTerm,
-            limit = 50,
-            paginationToken = null,
-            sortField = 'created_at',
-            sortDirection = 'desc',
-            isExpense,
-            isRecurrent,
-        } = req?.body;
+	try {
+		const {
+			searchTerm,
+			limit = 50,
+			paginationToken = null,
+			sortField = 'created_at',
+			sortDirection = 'desc',
+			isExpense,
+			isRecurrent
+		} = req?.body
 
-        const properDirection = paginationToken?.direction === 'previous' ?
-            (sortDirection === 'desc' ? 1 : -1) :
-            (sortDirection === 'desc' ? -1 : 1);
+		const properDirection =
+			paginationToken?.direction === 'previous'
+				? sortDirection === 'desc'
+					? 1
+					: -1
+				: sortDirection === 'desc'
+					? -1
+					: 1
 
-        const sort = {
-            [sortField]: properDirection,
-            created_at: properDirection
-        };
+		const sort = {
+			[sortField]: properDirection,
+			created_at: properDirection
+		}
 
-        const and = [];
-        if (typeof (isExpense) !== 'undefined')
-            and.push({ isExpense })
+		const and = []
+		if (typeof isExpense !== 'undefined') and.push({ isExpense })
 
-        if (typeof (isRecurrent) !== 'undefined')
-            and.push({ isRecurrent })
+		if (typeof isRecurrent !== 'undefined') and.push({ isRecurrent })
 
-        if (searchTerm) {
-            let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
+		if (searchTerm) {
+			let or = [{ type: getIlikeSearch(searchTerm) }, { description: getIlikeSearch(searchTerm) }]
 
+			if (!isNaN(searchTerm)) or.push({ amount: searchTerm })
 
-            if (!isNaN(searchTerm))
-                or.push({ amount: searchTerm })
+			if (searchTerm.toString().split('-').length === 3) or = handleDateSearchTerm(searchTerm, or)
 
-            if (searchTerm.toString().split('-').length === 3)
-                or = handleDateSearchTerm(searchTerm, or);
+			and.push({ $or: or })
+		}
 
-            and.push({ $or: or });
-        }
+		if (paginationToken) {
+			and.push({
+				$or:
+					paginationToken.direction === 'previous'
+						? [
+								{
+									[sortField]: {
+										[sortDirection === 'desc' ? '$gt' : '$lt']: paginationToken.firstSortValue
+									}
+								},
+								{
+									[sortField]: paginationToken.firstSortValue,
+									created_at: { $gt: paginationToken.firstCreatedAt }
+								}
+							]
+						: [
+								{
+									[sortField]: {
+										[sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
+									}
+								},
+								{
+									[sortField]: paginationToken.lastSortValue,
+									created_at: { $lt: paginationToken.lastCreatedAt }
+								}
+							]
+			})
+		}
 
-        if (paginationToken) {
-            and.push({
-                $or: paginationToken.direction === 'previous' ?
-                    [
-                        {
-                            [sortField]: {
-                                [sortDirection === 'desc' ? '$gt' : '$lt']: paginationToken.firstSortValue
-                            }
-                        },
-                        {
-                            [sortField]: paginationToken.firstSortValue,
-                            created_at: { $gt: paginationToken.firstCreatedAt }
-                        }
-                    ] :
-                    [
-                        {
-                            [sortField]: {
-                                [sortDirection === 'desc' ? '$lt' : '$gt']: paginationToken.lastSortValue
-                            }
-                        },
-                        {
-                            [sortField]: paginationToken.lastSortValue,
-                            created_at: { $lt: paginationToken.lastCreatedAt }
-                        }
-                    ]
-            });
-        }
+		const search = { $and: and }
 
-        const search = { $and: and };
+		const baseAggregationPipeline = [
+			{ $match: search },
+			{
+				$lookup: {
+					from: 'categories',
+					localField: 'category',
+					foreignField: '_id',
+					as: 'category'
+				}
+			},
+			{ $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+			{
+				$lookup: {
+					from: 'subcategories',
+					localField: 'subCategory',
+					foreignField: '_id',
+					as: 'subCategory'
+				}
+			},
+			{ $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } }
+		]
 
-        const baseAggregationPipeline = [
-            { $match: search },
-            {
-                $lookup: {
-                    from: 'categories',
-                    localField: 'category',
-                    foreignField: '_id',
-                    as: 'category'
-                }
-            },
-            { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
-            {
-                $lookup: {
-                    from: 'subcategories',
-                    localField: 'subCategory',
-                    foreignField: '_id',
-                    as: 'subCategory'
-                }
-            },
-            { $unwind: { path: "$subCategory", preserveNullAndEmptyArrays: true } }
-        ];
+		if (searchTerm) {
+			baseAggregationPipeline.push({
+				$match: {
+					$or: [
+						{ 'category.name': getIlikeSearch(searchTerm) },
+						{ 'subCategory.name': getIlikeSearch(searchTerm) }
+					]
+				}
+			})
+		}
 
-        if (searchTerm) {
-            baseAggregationPipeline.push({
-                $match: {
-                    $or: [
-                        { 'category.name': getIlikeSearch(searchTerm) },
-                        { 'subCategory.name': getIlikeSearch(searchTerm) }
-                    ]
-                }
-            });
-        }
+		const totalAggregationPipeline = [...baseAggregationPipeline, { $count: 'total' }]
+		const total = (await model.aggregate(totalAggregationPipeline))?.[0]?.total ?? 0
 
-        const totalAggregationPipeline = [...baseAggregationPipeline, { $count: 'total' }];
-        const total = (await model.aggregate(totalAggregationPipeline))?.[0]?.total ?? 0;
+		const resultAggregationPipeline = [...baseAggregationPipeline, { $sort: sort }, { $limit: limit + 1 }]
 
-        const resultAggregationPipeline = [
-            ...baseAggregationPipeline,
-            { $sort: sort },
-            { $limit: limit + 1 }
-        ];
+		const transactions = await model.aggregate(resultAggregationPipeline)
 
-        const transactions = await model.aggregate(resultAggregationPipeline);
+		let hasMore = transactions.length > limit
+		const isFirstSearch = !paginationToken
+		let resultTransactions = hasMore ? transactions.slice(0, -1) : transactions
+		if (paginationToken?.direction === 'previous') {
+			resultTransactions = resultTransactions.reverse()
+			hasMore = true
+		}
+		const amount = resultTransactions?.length
 
-        let hasMore = transactions.length > limit;
-        const isFirstSearch = !paginationToken;
-        let resultTransactions = hasMore ? transactions.slice(0, -1) : transactions;
-        if (paginationToken?.direction === 'previous') {
-            resultTransactions = resultTransactions.reverse();
-            hasMore = true;
-        }
-        const amount = resultTransactions?.length;
+		const firstTransaction = resultTransactions[0]
+		const lastTransaction = resultTransactions[resultTransactions.length - 1]
 
-        const firstTransaction = resultTransactions[0];
-        const lastTransaction = resultTransactions[resultTransactions.length - 1];
-
-        return res.json({
-            status: 'success',
-            data: resultTransactions,
-            total,
-            length: amount,
-            nextPageToken: hasMore ? {
-                lastSortValue: lastTransaction[sortField],
-                lastCreatedAt: lastTransaction.created_at,
-                direction: 'next'
-            } : null,
-            previousPageToken: !isFirstSearch ? {
-                firstSortValue: firstTransaction[sortField],
-                firstCreatedAt: firstTransaction.created_at,
-                direction: 'previous'
-            } : null
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			data: resultTransactions,
+			total,
+			length: amount,
+			nextPageToken: hasMore
+				? {
+						lastSortValue: lastTransaction[sortField],
+						lastCreatedAt: lastTransaction.created_at,
+						direction: 'next'
+					}
+				: null,
+			previousPageToken: !isFirstSearch
+				? {
+						firstSortValue: firstTransaction[sortField],
+						firstCreatedAt: firstTransaction.created_at,
+						direction: 'previous'
+					}
+				: null
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 exports.getAll = async (req, res) => {
-    try {
-        const items = await dbFunctions.find(model, { populate: populateCategoryAndSubCategory })
+	try {
+		const items = await dbFunctions.find(model, { populate: populateCategoryAndSubCategory })
 
-        return res.json({
-            status: 'success',
-            data: items
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			data: items
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 exports.getDetails = async (req, res) => {
-    try {
-        const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateCategoryAndSubCategory })
-        if (response?.status === 'error')
-            return res.status(500).json(response)
+	try {
+		const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateCategoryAndSubCategory })
+		if (response?.status === 'error') return res.status(500).json(response)
 
-        return res.json({
-            status: 'success',
-            data: response
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			data: response
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
-exports.create = [handleCategories, async (req, res) => {
-    try {
-        const response = await dbFunctions.insertOne(model, req?.body)
-        if (response?.status === 'error')
-            return res.status(500).res.json(response)
+exports.create = [
+	handleCategories,
+	async (req, res) => {
+		try {
+			const response = await dbFunctions.insertOne(model, req?.body)
+			if (response?.status === 'error') return res.status(500).res.json(response)
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populateCategoryAndSubCategory })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
-}]
+			return sendCreateUpdateSuccessResponse(res, model, response?._id, {
+				populate: populateCategoryAndSubCategory
+			})
+		} catch (err) {
+			return res.status(500).json({ status: 'error', message: err.message })
+		}
+	}
+]
 
 exports.createMany = async (req, res) => {
-    try {
-        const isMissingDataInIndex = req.body.findIndex(i => !i.date || !i.category || !i.subCategory || !i.amount || !i.description)
-        if (isMissingDataInIndex)
-            return res.status(400).json({ status: 'error', code: 'missing_data_in_line' })
+	try {
+		const isMissingDataInIndex = req.body.findIndex(
+			i => !i.date || !i.category || !i.subCategory || !i.amount || !i.description
+		)
+		if (isMissingDataInIndex) return res.status(400).json({ status: 'error', code: 'missing_data_in_line' })
 
-        const data = []
-        for (let i = 0; i < req.body.length; i++) {
-            const line = req.body[i];
-            const [c, s] = await Promise.all([
-                dbFunctions.find(categories, { search: { name: getIlikeSearch(line.category) } }),
-                dbFunctions.find(subCategories, { search: { name: getIlikeSearch(line.subcategory) } })
-            ])
-            if (c.length === 0)
-                return res.status(400).json({ status: 'error', code: 'category_not_found_in_line', index: i + 1 })
-            if (s.length === 0)
-                return res.status(400).json({ status: 'error', code: 'subcategory_not_found_in_line', index: i + 1 })
+		const data = []
+		for (let i = 0; i < req.body.length; i++) {
+			const line = req.body[i]
+			const [c, s] = await Promise.all([
+				dbFunctions.find(categories, { search: { name: getIlikeSearch(line.category) } }),
+				dbFunctions.find(subCategories, { search: { name: getIlikeSearch(line.subcategory) } })
+			])
+			if (c.length === 0)
+				return res.status(400).json({ status: 'error', code: 'category_not_found_in_line', index: i + 1 })
+			if (s.length === 0)
+				return res.status(400).json({ status: 'error', code: 'subcategory_not_found_in_line', index: i + 1 })
 
-            data.push({ ...line, created_at: line.date, category: c[0]._id, subCategory: s[0]._id, })
-        }
+			data.push({ ...line, created_at: line.date, category: c[0]._id, subCategory: s[0]._id })
+		}
 
-        const response = await dbFunctions.insertMany(model, data)
-        if (response?.status === 'error')
-            return res.status(500).json(response)
+		const response = await dbFunctions.insertMany(model, data)
+		if (response?.status === 'error') return res.status(500).json(response)
 
-        return res.status(200).json({ status: 'success' })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.status(200).json({ status: 'success' })
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 exports.delete = async (req, res) => {
-    try {
-        // const transactionData = await dbFunctions.findOne(model, req?.params?.id)
-        const response = await dbFunctions.deleteOne(model, req?.params?.id)
+	try {
+		// const transactionData = await dbFunctions.findOne(model, req?.params?.id)
+		const response = await dbFunctions.deleteOne(model, req?.params?.id)
 
-        if (response?.status === 'error')
-            return res.status(500).json(response)
+		if (response?.status === 'error') return res.status(500).json(response)
 
-        return res.json({
-            status: 'success',
-            id: req?.params?.id
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			id: req?.params?.id
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
-exports.update = [handleCategories, async (req, res) => {
-    try {
-        const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
+exports.update = [
+	handleCategories,
+	async (req, res) => {
+		try {
+			const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
 
-        if (response?.status === 'error')
-            return res.status(500).json(response)
+			if (response?.status === 'error') return res.status(500).json(response)
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id, { populate: populateCategoryAndSubCategory })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
-}]
+			return sendCreateUpdateSuccessResponse(res, model, response?._id, {
+				populate: populateCategoryAndSubCategory
+			})
+		} catch (err) {
+			return res.status(500).json({ status: 'error', message: err.message })
+		}
+	}
+]

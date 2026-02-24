@@ -1,63 +1,63 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 // const moment = require('moment');
 // const balanceModel = require('./balance');
 
 const schema = new mongoose.Schema({
-    category: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'category',
-        required: true,
-        messsage: 'required field'
-    },
-    subCategory: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'subCategory',
-        required: false,
-    },
-    date: {
-        type: Number,
-        required: true
-    },
-    amount: {
-        type: Number,
-        min: 0,
-        required: true
-    },
-    type: {
-        type: String,
-        required: true,
-    },
-    isExpense: {
-        type: Boolean,
-        required: false,
-    },
-    description: {
-        type: String,
-        required: false,
-    },
-    isRecurrent: {
-        type: Boolean,
-        required: false,
-    },
-    recurrentTransactionId: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'recurrentTransaction',
-        required: false
-    },
-    debtId: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'debt',
-        required: false
-    },
-    created_at: {
-        type: Number,
-        default: Date.now(),
-    },
-    update_at: {
-        type: Number,
-        default: Date.now(),
-    }
-});
+	category: {
+		type: mongoose.SchemaTypes.ObjectId,
+		ref: 'category',
+		required: true,
+		messsage: 'required field'
+	},
+	subCategory: {
+		type: mongoose.SchemaTypes.ObjectId,
+		ref: 'subCategory',
+		required: false
+	},
+	date: {
+		type: Number,
+		required: true
+	},
+	amount: {
+		type: Number,
+		min: 0,
+		required: true
+	},
+	type: {
+		type: String,
+		required: true
+	},
+	isExpense: {
+		type: Boolean,
+		required: false
+	},
+	description: {
+		type: String,
+		required: false
+	},
+	isRecurrent: {
+		type: Boolean,
+		required: false
+	},
+	recurrentTransactionId: {
+		type: mongoose.SchemaTypes.ObjectId,
+		ref: 'recurrentTransaction',
+		required: false
+	},
+	debtId: {
+		type: mongoose.SchemaTypes.ObjectId,
+		ref: 'debt',
+		required: false
+	},
+	created_at: {
+		type: Number,
+		default: Date.now()
+	},
+	update_at: {
+		type: Number,
+		default: Date.now()
+	}
+})
 // schema.post('save', async (data, next) => {
 //     try {
 //         if (data?.type === 'cup') {

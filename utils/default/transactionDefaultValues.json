@@ -1,62 +1,62 @@
 [
-    {
-        "category": "Comida",
-        "subCategory": "Pan",
-        "amount": 390,
-        "description": "3 panes"
-    },
-    {
-        "category": "Comida",
-        "subCategory": "Puré",
-        "amount": 1200,
-        "description": "2 latas"
-    },
-    {
-        "category": "Comida",
-        "subCategory": "Aceite",
-        "amount": 1980,
-        "description": "2 pomos"
-    },
-    {
-        "category": "Comida",
-        "subCategory": "Pollo",
-        "amount": 4000,
-        "description": "1 paquete"
-    },
-    {
-        "category": "Comida",
-        "subCategory": "Huevos",
-        "amount": 3000,
-        "description": "1 fill"
-    },
-    {
-        "category": "Comida",
-        "subCategory": "Yogurt",
-        "amount": 480,
-        "description": "2 potes"
-    },
-    {
-        "category": "Comida",
-        "subCategory": "Miel",
-        "amount": 400,
-        "description": "1l"
-    },
-    {
-        "category": "Comida",
-        "subCategory": "Ensalada",
-        "amount": 700,
-        "description": "2lb de tomates"
-    },
-    {
-        "category": "Mandados",
-        "subCategory": "Cigarros",
-        "amount": 260,
-        "description": "8 cajas de cigarros y 2 tabacos"
-    },
-    {
-        "category": "Transporte",
-        "subCategory": "Parqueo",
-        "amount": 10,
-        "description": ""
-    }
+	{
+		"category": "Comida",
+		"subCategory": "Pan",
+		"amount": 390,
+		"description": "3 panes"
+	},
+	{
+		"category": "Comida",
+		"subCategory": "Puré",
+		"amount": 1200,
+		"description": "2 latas"
+	},
+	{
+		"category": "Comida",
+		"subCategory": "Aceite",
+		"amount": 1980,
+		"description": "2 pomos"
+	},
+	{
+		"category": "Comida",
+		"subCategory": "Pollo",
+		"amount": 4000,
+		"description": "1 paquete"
+	},
+	{
+		"category": "Comida",
+		"subCategory": "Huevos",
+		"amount": 3000,
+		"description": "1 fill"
+	},
+	{
+		"category": "Comida",
+		"subCategory": "Yogurt",
+		"amount": 480,
+		"description": "2 potes"
+	},
+	{
+		"category": "Comida",
+		"subCategory": "Miel",
+		"amount": 400,
+		"description": "1l"
+	},
+	{
+		"category": "Comida",
+		"subCategory": "Ensalada",
+		"amount": 700,
+		"description": "2lb de tomates"
+	},
+	{
+		"category": "Mandados",
+		"subCategory": "Cigarros",
+		"amount": 260,
+		"description": "8 cajas de cigarros y 2 tabacos"
+	},
+	{
+		"category": "Transporte",
+		"subCategory": "Parqueo",
+		"amount": 10,
+		"description": ""
+	}
 ]

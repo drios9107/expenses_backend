@@ -1,28 +1,29 @@
-[{
-        "name": "Comida"
-    },
-    {
-        "name": "Impuestos"
-    },
-    {
-        "name": "Mandados"
-    },
-    {
-        "name": "Otros"
-    },
-    {
-        "name": "Transporte"
-    },
-    {
-        "name": "Compra Online"
-    },
-    {
-        "name": "Datos/Nauta Etecsa"
-    },
-    {
-        "name": "Ropa"
-    },
-    {
-        "name": "Ingresos"
-    }
+[
+	{
+		"name": "Comida"
+	},
+	{
+		"name": "Impuestos"
+	},
+	{
+		"name": "Mandados"
+	},
+	{
+		"name": "Otros"
+	},
+	{
+		"name": "Transporte"
+	},
+	{
+		"name": "Compra Online"
+	},
+	{
+		"name": "Datos/Nauta Etecsa"
+	},
+	{
+		"name": "Ropa"
+	},
+	{
+		"name": "Ingresos"
+	}
 ]

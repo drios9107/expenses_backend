@@ -1,73 +1,76 @@
-const dbFunctions = require("../utils/mongooseDbFunctions")
-const model = require("../models/subCategory")
-const handleCategories = require("../utils/categoryHandlers");
-const { populateCategory, sendCreateUpdateSuccessResponse } = require("../utils/common");
+const dbFunctions = require('../utils/mongooseDbFunctions')
+const model = require('../models/subCategory')
+const handleCategories = require('../utils/categoryHandlers')
+const { populateCategory, sendCreateUpdateSuccessResponse } = require('../utils/common')
 
 exports.getAll = async (req, res) => {
-    try {
-        const items = await dbFunctions.find(model, { sort: { name: 1 }, populate: populateCategory });
+	try {
+		const items = await dbFunctions.find(model, { sort: { name: 1 }, populate: populateCategory })
 
-        return res.json({
-            status: 'success',
-            data: items
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			data: items
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 exports.getDetails = async (req, res) => {
-    try {
-        const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateCategory })
-        if (response?.status === 'error')
-            return res.status(500).json(response)
+	try {
+		const response = await dbFunctions.findOne(model, req?.params?.id, { populate: populateCategory })
+		if (response?.status === 'error') return res.status(500).json(response)
 
-        return res.json({
-            status: 'success',
-            data: response
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		return res.json({
+			status: 'success',
+			data: response
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
-exports.create = [handleCategories, async (req, res) => {
-    try {
-        const response = await dbFunctions.insertOne(model, req?.body)
-        if (response?.status === 'error')
-            return res.status(500).json(response)
+exports.create = [
+	handleCategories,
+	async (req, res) => {
+		try {
+			const response = await dbFunctions.insertOne(model, req?.body)
+			if (response?.status === 'error') return res.status(500).json(response)
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id)
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
-}]
+			return sendCreateUpdateSuccessResponse(res, model, response?._id)
+		} catch (err) {
+			return res.status(500).json({ status: 'error', message: err.message })
+		}
+	}
+]
 
 exports.delete = async (req, res) => {
-    try {
-        const response = await dbFunctions.deleteOne(model, req?.params?.id)
+	try {
+		const response = await dbFunctions.deleteOne(model, req?.params?.id)
 
-        if (response?.status === 'error') {
-            return res.status(500).json(response)
-        }
-        return res.json({
-            status: 'success',
-            id: req?.params?.id
-        })
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
+		if (response?.status === 'error') {
+			return res.status(500).json(response)
+		}
+		return res.json({
+			status: 'success',
+			id: req?.params?.id
+		})
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
-exports.update = [handleCategories, async (req, res) => {
-    try {
-        const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
+exports.update = [
+	handleCategories,
+	async (req, res) => {
+		try {
+			const response = await dbFunctions.updateOne(model, req?.params?.id, req?.body)
 
-        if (response?.status === 'error')
-            return res.status(500).json(response)
+			if (response?.status === 'error') return res.status(500).json(response)
 
-        return sendCreateUpdateSuccessResponse(res, model, response?._id);
-    } catch (err) {
-        return res.status(500).json({ status: 'error', message: err.message })
-    }
-}]
+			return sendCreateUpdateSuccessResponse(res, model, response?._id)
+		} catch (err) {
+			return res.status(500).json({ status: 'error', message: err.message })
+		}
+	}
+]

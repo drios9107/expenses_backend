@@ -1,7 +1,8 @@
-[{
-        "name": "User"
-    },
-    {
-        "name": "Admin"
-    }
+[
+	{
+		"name": "User"
+	},
+	{
+		"name": "Admin"
+	}
 ]
