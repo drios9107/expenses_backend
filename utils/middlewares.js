@@ -1,4 +1,7 @@
 const jwt = require('jsonwebtoken')
+const dbFunctions = require('./mongooseDbFunctions')
+const userModel = require('../models/user')
+const { populateRole } = require('./common')
 
 const authRoutes = ['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken']
 const testingEndpoints = []
@@ -17,6 +20,19 @@ exports.verifyToken = async (req, res, next) => {
 			req.userData = tokenIsValid
 			return next()
 		}
+	} catch (err) {
+		return res.status(401).json({ code: 'invalid-token', message: 'Access denied' })
+	}
+}
+
+exports.isAdmin = async (req, res, next) => {
+	try {
+		if (freeTest) return next()
+		if (req?.userData?._id) {
+			const loggedUser = await dbFunctions.findOne(userModel, req.userData._id, { populate: populateRole })
+			if (loggedUser?.role?.name === 'Admin') return next()
+		}
+		return res.status(401).json({ code: 'forbidden', message: 'Unauthorized' })
 	} catch (err) {
 		return res.status(401).json({ code: 'invalid-token', message: 'Access denied' })
 	}

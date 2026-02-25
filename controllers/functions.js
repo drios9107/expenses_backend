@@ -28,6 +28,7 @@ const {
 	currentMonthSearch,
 	emptyDataForCharts
 } = require('../utils/common')
+const { isAdmin } = require('../utils/middlewares')
 
 const getPersonFullName = row => {
 	let fullname = row?.name
@@ -482,3 +483,82 @@ exports.addCreatedAt = async (req, res) => {
 		return res.status(500).json({ status: 'error', message: err.message })
 	}
 }
+
+exports.backupMongoDB = [
+	isAdmin,
+	(req, res) => {
+		try {
+			const timestamp = moment().format('YYYY-MM-DD_HH-mm-ss')
+			const name = `${process.env.MONGO_DB_DB_NAME}_${timestamp}`
+			const zipFile = `${name}.zip`
+			const dumpPath = path.resolve(`./backup/${name}`)
+			const zipPath = path.resolve(`./backup/${zipFile}`)
+
+			const command = `mongodump --db=${process.env.MONGO_DB_DB_NAME} --out=${dumpPath}`
+
+			exec(command, (error, stdout, stderr) => {
+				if (error)
+					return res.status(500).json({
+						status: 'error',
+						message: 'Backup failed: ' + error.message,
+						code: 'backup_failed'
+					})
+
+				if (!stderr.includes('done dumping'))
+					return res.status(500).json({
+						status: 'error',
+						message: 'Backup failed: ' + stderr,
+						code: 'backup_failed'
+					})
+
+				const output = fs.createWriteStream(zipPath)
+				const archive = archiver('zip', { zlib: { level: 9 } })
+
+				output.on('close', () => {
+					const fileSizeInBytes = archive.pointer()
+					const fileSizeInMB = fileSizeInBytes / (1024 * 1024)
+					const fileSizeInKB = fileSizeInBytes / 1024
+
+					if (fileSizeInMB < 10) {
+						res.setHeader('Content-Disposition', `attachment; filename="${zipFile}"`)
+						res.setHeader('Content-Type', 'application/zip')
+						res.setHeader('Content-Transfer-Encoding', 'binary')
+
+						res.sendFile(zipPath, err => {
+							if (err) {
+								console.error('Error sending file:', err)
+							}
+
+							fs.rm(dumpPath, { recursive: true, force: true }, () => {})
+						})
+						return
+					} else {
+						const size =
+							fileSizeInMB >= 1 ? `${fileSizeInMB.toFixed(2)} MB` : `${fileSizeInKB.toFixed(2)} KB`
+
+						return res.status(200).json({
+							status: 'success',
+							code: 'backup_completed',
+							file: zipFile,
+							size
+						})
+					}
+				})
+
+				archive.on('error', err => {
+					return res.status(500).json({
+						status: 'error',
+						message: 'Archive failed: ' + err.message,
+						code: 'backup_failed'
+					})
+				})
+
+				archive.pipe(output)
+				archive.directory(dumpPath, false)
+				archive.finalize()
+			})
+		} catch (err) {
+			return res.status(500).json({ status: 'error', message: err.message })
+		}
+	}
+]
