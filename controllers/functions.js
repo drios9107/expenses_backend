@@ -409,6 +409,7 @@ const checkMissingItemExists = async (model, dataList, jsonValues = [], modelNam
 			} else await dbFunctions.insertMany(model, missingItems)
 	} catch (e) {
 		console.log('***error', e)
+		throw e
 	}
 }
 
