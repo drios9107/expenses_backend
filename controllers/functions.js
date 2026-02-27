@@ -434,23 +434,30 @@ const checkSubCategoriesExists = async (categories, subCategories) => {
 	}
 }
 
-exports.callFirstRun = async () => {
-	let [categories, roles, users] = await Promise.all([
-		dbFunctions.find(categoriesModel),
-		dbFunctions.find(rolesModel),
-		dbFunctions.find(usersModel)
-	])
-	if (categories) {
-		await checkMissingItemExists(categoriesModel, categories, defaultCategories, 'categories')
-		const [updatedCategories, subCategories] = await Promise.all([
-			dbFunctions.find(categoriesModel),
-			dbFunctions.find(subCategoriesModel)
-		])
-		if (updatedCategories && subCategories) await checkSubCategoriesExists(updatedCategories, subCategories)
-	}
+exports.createDefaultValues = async (req, res) => {
+	try {
+		if (req?.body?.secret !== process.env.CREATE_DEFAULT_VALUES_SECRET)
+			return res.status(401).json({ status: 'error', message: 'Unauthorized' })
 
-	await checkMissingItemExists(rolesModel, roles, defaultRoles, 'roles')
-	await checkMissingItemExists(usersModel, users, defaultUsers, 'users', 'email')
+		let [categories, roles, users] = await Promise.all([
+			dbFunctions.find(categoriesModel),
+			dbFunctions.find(rolesModel),
+			dbFunctions.find(usersModel)
+		])
+		if (categories) {
+			await checkMissingItemExists(categoriesModel, categories, defaultCategories, 'categories')
+			const [updatedCategories, subCategories] = await Promise.all([
+				dbFunctions.find(categoriesModel),
+				dbFunctions.find(subCategoriesModel)
+			])
+			if (updatedCategories && subCategories) await checkSubCategoriesExists(updatedCategories, subCategories)
+		}
+
+		await checkMissingItemExists(rolesModel, roles, defaultRoles, 'roles')
+		await checkMissingItemExists(usersModel, users, defaultUsers, 'users', 'email')
+	} catch (err) {
+		return res.status(500).json({ status: 'error', message: err.message })
+	}
 }
 
 exports.addCreatedAt = async (req, res) => {

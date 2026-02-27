@@ -3,7 +3,7 @@ const dbFunctions = require('./mongooseDbFunctions')
 const userModel = require('../models/user')
 const { populateRole } = require('./common')
 
-const authRoutes = ['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken']
+const authRoutes = ['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken', 'functions/create-default']
 const testingEndpoints = []
 const freeTest = true
 

@@ -4,6 +4,7 @@ const functionsController = require('../controllers/functions')
 const router = express.Router()
 
 router.post('/send-email', emailController.sendEmail)
+router.post('/create-default', functionsController.createDefaultValues)
 router.post('/convert-currency', functionsController.convertCurrency)
 router.get('/backup-db', functionsController.backupMongoDB)
 
