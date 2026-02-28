@@ -455,6 +455,8 @@ exports.createDefaultValues = async (req, res) => {
 
 		await checkMissingItemExists(rolesModel, roles, defaultRoles, 'roles')
 		await checkMissingItemExists(usersModel, users, defaultUsers, 'users', 'email')
+
+		return res.json({ status: 'success', message: 'Default values created or already exist' })
 	} catch (err) {
 		return res.status(500).json({ status: 'error', message: err.message })
 	}
