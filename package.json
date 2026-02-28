@@ -23,6 +23,7 @@
 		"mongoose": "^8.7.1",
 		"nodemailer": "^7.0.3",
 		"nodemon": "^3.1.7",
+		"pino": "^10.3.1",
 		"prettier": "^3.8.1"
 	}
 }

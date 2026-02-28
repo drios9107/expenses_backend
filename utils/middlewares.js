@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken')
 const dbFunctions = require('./mongooseDbFunctions')
 const userModel = require('../models/user')
 const { populateRole } = require('./common')
+const { createLoggerForRoute } = require('./pino.conf')
 
 const authRoutes = ['/auth/login', '/auth/register', '/auth/verifyOauthAccessToken', 'functions/create-default']
 const testingEndpoints = []
@@ -36,4 +37,46 @@ exports.isAdmin = async (req, res, next) => {
 	} catch (err) {
 		return res.status(401).json({ code: 'invalid-token', message: 'Access denied' })
 	}
+}
+
+exports.requestLogger = (req, res, next) => {
+	let responseCode = null
+	let responseMessage = null
+	let responseIndex = null
+
+	const originalJson = res.json
+
+	res.json = function (body) {
+		responseCode = body?.code
+		responseMessage = body?.message
+		responseIndex = body?.index
+		return originalJson.call(this, body)
+	}
+
+	res.on('finish', () => {
+		if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+			const routeName = req.baseUrl.replace('/', '') || 'root'
+			const logger = createLoggerForRoute(routeName)
+
+			const data = {
+				userId: req?.userdata?._id,
+				method: req.method,
+				path: req.originalUrl,
+				status: res.statusCode,
+				payload: req?.body ?? undefined
+			}
+
+			if (res.statusCode >= 400) {
+				data.error = {
+					code: responseCode ?? res.statusCode,
+					message: responseMessage ?? res.statusMessage
+				}
+				if (responseIndex) data.error['index'] = responseIndex
+			}
+
+			logger.info(data)
+		}
+	})
+
+	next()
 }
