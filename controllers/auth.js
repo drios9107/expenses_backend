@@ -3,6 +3,7 @@ const userModel = require('../models/user')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { generateAccessToken, createUser, populateRole } = require('../utils/common')
+const user = require('../models/user')
 
 exports.register = async (req, res) => {
 	if (!req?.body?.email || !req?.body?.password)
@@ -48,22 +49,37 @@ exports.login = async (req, res) => {
 
 exports.verifyOauthAccessToken = async (req, res) => {
 	try {
-		if (!req?.body?.provider || !req?.body?.user || !req?.body?.accessToken)
+		if (!req?.body?.provider || !req?.body?.accessToken)
 			return res.status(400).json({ code: 'missing-params', message: 'Missing params' })
 
 		const url =
 			req.body.provider === 'github'
 				? 'https://api.github.com/user'
-				: 'https://www.googleapis.com/oauth2/v3/userinfo?access_token'
+				: 'https://www.googleapis.com/oauth2/v3/userinfo'
 
 		const response = await fetch(url, {
 			headers: { Authorization: `Bearer ${req.body.accessToken}` }
 		})
 		if (!response?.ok) return res.status(401).json({ code: 'invalid-token', message: 'Access denied' })
 
-		const token = generateAccessToken(req.body.user)
+		userData = await response.json()
+		const dbUser = await dbFunctions.find(user, { search: { email: userData?.email }, populate: populateRole })
+		if (!dbUser) {
+			return res.status(404).json({
+				code: 'user-not-found',
+				message: 'No user found with this email'
+			})
+		}
 
-		return res.send({ ...req.body.user, token })
+		const tempUser = {
+			email: userData?.email,
+			role: dbUser?.role?.name,
+			_id: dbUser?._id?.toString()
+		}
+
+		const token = generateAccessToken(tempUser)
+
+		return res.send({ ...tempUser, token })
 	} catch (error) {
 		console.error('***verifyOauthAccessToken error:', error)
 		return res.status(500).json({ code: 'internal-server-error', message: 'Internal server error' })
