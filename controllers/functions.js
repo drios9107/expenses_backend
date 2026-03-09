@@ -404,7 +404,11 @@ const checkMissingItemExists = async (model, dataList, jsonValues = [], modelNam
 				if (roles.length > 0)
 					for (let i = 0; i < missingItems.length; i++)
 						await createUser({
-							body: { ...missingItems[i], role: roles.find(r => r.name === missingItems[i].role).id }
+							body: {
+								...missingItems[i],
+								role: roles.find(r => r.name === missingItems[i].role)._id,
+								password: process.env.NODE_DEFAULT_USER_PASSWORD
+							}
 						})
 			} else await dbFunctions.insertMany(model, missingItems)
 	} catch (e) {
