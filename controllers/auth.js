@@ -66,9 +66,8 @@ exports.verifyOauthAccessToken = async (req, res) => {
 		if (!response?.ok) return res.status(401).json({ code: 'invalid-token', message: 'Access denied' })
 
 		oauthUser = await response.json()
-		console.log('***oauthuser', oauthUser)
 		const users = await dbFunctions.find(userModel, {
-			search: { email: req.body.provider === 'github' ? req.body.user.email : oauthUser?.email },
+			search: { email: req.body.user.email },
 			populate: populateRole
 		})
 
