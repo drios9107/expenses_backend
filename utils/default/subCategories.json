@@ -108,6 +108,10 @@
 		"category": "Comida"
 	},
 	{
+		"name": "Picadillo",
+		"category": "Comida"
+	},
+	{
 		"name": "Pañales",
 		"category": "Otros"
 	},
@@ -118,6 +122,10 @@
 	{
 		"name": "Bicimoto",
 		"category": "Transporte"
+	},
+	{
+		"name": "Coditos",
+		"category": "Comida"
 	},
 	{
 		"name": "Medicina",
@@ -185,6 +193,10 @@
 	},
 	{
 		"name": "Huevos",
+		"category": "Comida"
+	},
+	{
+		"name": "Helado",
 		"category": "Comida"
 	},
 	{
