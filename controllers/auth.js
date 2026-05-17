@@ -29,6 +29,13 @@ exports.login = async (req, res) => {
 			if (response.length === 0)
 				return res.status(404).json({ code: 'user-not-found', message: "The user doesn't exist" })
 
+			if (!response[0].isActive) {
+				return res.status(401).json({
+					code: 'user-inactive',
+					message: 'User account is deactivated. Please contact administrator'
+				})
+			}
+
 			const isValid = await bcrypt.compare(req.body.password, response[0].password)
 			if (!isValid)
 				return res
@@ -46,7 +53,7 @@ exports.login = async (req, res) => {
 		}
 	} catch (error) {
 		console.error('Login error:', error)
-		return res.status(500).json({ code: 'internal-server-error', message: 'Internal server error' })
+		return res.status(500).json({ code: 'internal_server_error', message: 'Internal server error' })
 	}
 }
 
@@ -88,6 +95,13 @@ exports.verifyOauthAccessToken = async (req, res) => {
 				role: 'User'
 			}
 		} else {
+			if (!user.isActive) {
+				return res.status(401).json({
+					code: 'user-inactive',
+					message: 'User account is deactivated. Please contact administrator'
+				})
+			}
+
 			tokenData = {
 				email: user?.email,
 				role: user?.role?.name ?? 'User',

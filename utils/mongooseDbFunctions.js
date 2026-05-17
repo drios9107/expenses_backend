@@ -93,3 +93,31 @@ exports.updateMany = (model, search = {}, { _id, ...data }) =>
 	model.updateMany(search, { $set: { ...data, updated_at: moment().valueOf() } }).catch(error => {
 		throw new Error(error)
 	})
+
+exports.softDelete = (model, id) =>
+	model
+		.findByIdAndUpdate(
+			id,
+			{
+				isActive: false,
+				update_at: moment().valueOf()
+			},
+			{ new: true }
+		)
+		.catch(error => {
+			throw new Error(error)
+		})
+
+exports.reactivate = (model, id) =>
+	model
+		.findByIdAndUpdate(
+			id,
+			{
+				isActive: true,
+				update_at: moment().valueOf()
+			},
+			{ new: true }
+		)
+		.catch(error => {
+			throw new Error(error)
+		})

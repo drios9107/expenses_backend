@@ -476,3 +476,10 @@ exports.generateAdvancedSearchResponse = async ({
 			: null
 	}
 }
+
+exports.deleteJsonError = (res, error) => {
+	const json = { status: 'error', message: error.message }
+	if (error.message === 'Error: unable-delete-in-use') json['code'] = 'unable-delete-in-use'
+
+	return res.status(500).json(json)
+}

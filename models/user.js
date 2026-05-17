@@ -22,6 +22,11 @@ const schema = new mongoose.Schema({
 		ref: 'person',
 		required: false
 	},
+	isActive: {
+		type: Boolean,
+		default: true,
+		index: true
+	},
 	created_at: {
 		type: Number,
 		default: Date.now()

@@ -47,6 +47,12 @@ exports.create = async (req, res) => {
 
 exports.delete = async (req, res) => {
 	try {
+		if (req?.userData?._id === req.params?.id)
+			return res.status(400).json({
+				code: 'unable-deactivate-logged-user',
+				message: 'No puede desactivar el usuario logueado'
+			})
+
 		const response = await dbFunctions.deleteOne(model, req?.params?.id)
 
 		if (response?.status === 'error') {
@@ -73,5 +79,33 @@ exports.update = async (req, res) => {
 		return sendCreateUpdateSuccessResponse(res, model, response?._id, userSearchCommonOptions)
 	} catch (err) {
 		return res.status(500).json({ status: 'error', message: err.message })
+	}
+}
+
+exports.reactivate = async (req, res) => {
+	try {
+		const response = await dbFunctions.reactivate(model, req?.params?.id)
+
+		if (response?.status === 'error') {
+			return res.status(500).json(response)
+		}
+
+		if (!response) {
+			return res.status(404).json({
+				code: 'user-not-found',
+				message: 'Usuario no encontrado'
+			})
+		}
+
+		return res.json({
+			status: 'success',
+			message: 'Usuario reactivado exitosamente',
+			data: {
+				id: req?.params?.id,
+				isActive: true
+			}
+		})
+	} catch (err) {
+		return deleteJsonError(res, err)
 	}
 }

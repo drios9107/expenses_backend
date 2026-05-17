@@ -16,4 +16,16 @@ const schema = new mongoose.Schema({
 	}
 })
 
+schema.pre('deleteOne', { document: false, query: true }, async function () {
+	const docToDelete = await this.model.findOne(this.getFilter())
+	if (docToDelete) {
+		const modelUser = mongoose.model('user')
+		const existingUser = await modelUser.findOne({
+			role: docToDelete._id
+		})
+
+		if (existingUser) throw new Error(`unable-delete-in-use`)
+	}
+})
+
 module.exports = mongoose.model('role', schema)
