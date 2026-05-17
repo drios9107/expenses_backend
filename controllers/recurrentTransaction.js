@@ -5,7 +5,12 @@ const { extendMoment } = require('moment-range')
 const momentRange = extendMoment(moment)
 const recurrentTransactionModel = require('../models/recurrentTransaction')
 const transactionsModel = require('../models/transaction')
-const { getAllBalance, populateCategoryAndSubCategory, sendCreateUpdateSuccessResponse } = require('../utils/common')
+const {
+	getAllBalance,
+	populateCategoryAndSubCategory,
+	sendCreateUpdateSuccessResponse,
+	deleteJsonError
+} = require('../utils/common')
 const handleCategories = require('../utils/categoryHandlers')
 
 exports.getAll = async (req, res) => {
@@ -66,7 +71,7 @@ exports.delete = async (req, res) => {
 			id: req?.params?.id
 		})
 	} catch (err) {
-		return res.status(500).json({ status: 'error', message: err.message })
+		return deleteJsonError(res, err)
 	}
 }
 

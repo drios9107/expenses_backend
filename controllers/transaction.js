@@ -8,7 +8,8 @@ const {
 	handleDateSearchTerm,
 	getIlikeSearch,
 	populateCategoryAndSubCategory,
-	generateAdvancedSearchResponse
+	generateAdvancedSearchResponse,
+	deleteJsonError
 } = require('../utils/common')
 const moment = require('moment')
 const handleCategories = require('../utils/categoryHandlers')
@@ -456,7 +457,6 @@ exports.createMany = async (req, res) => {
 
 exports.delete = async (req, res) => {
 	try {
-		// const transactionData = await dbFunctions.findOne(model, req?.params?.id)
 		const response = await dbFunctions.deleteOne(model, req?.params?.id)
 
 		if (response?.status === 'error') return res.status(500).json(response)
@@ -466,7 +466,7 @@ exports.delete = async (req, res) => {
 			id: req?.params?.id
 		})
 	} catch (err) {
-		return res.status(500).json({ status: 'error', message: err.message })
+		return deleteJsonError(res, err)
 	}
 }
 

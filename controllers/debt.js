@@ -11,7 +11,8 @@ const {
 	getProperDebtSubCategory,
 	getProperDebtCategory,
 	generateDebtTransactions,
-	generateDebtCompletedTransaction
+	generateDebtCompletedTransaction,
+	deleteJsonError
 } = require('../utils/common')
 const mongoose = require('mongoose')
 
@@ -105,7 +106,7 @@ exports.delete = async (req, res) => {
 		})
 	} catch (err) {
 		await session.abortTransaction()
-		return res.status(500).json({ status: 'error', message: err.message })
+		return deleteJsonError(res, err)
 	} finally {
 		await session.endSession()
 	}

@@ -1,7 +1,7 @@
 const dbFunctions = require('../utils/mongooseDbFunctions')
 const model = require('../models/person')
 const userModel = require('../models/user')
-const { sendCreateUpdateSuccessResponse, populateUser } = require('../utils/common')
+const { sendCreateUpdateSuccessResponse, populateUser, deleteJsonError } = require('../utils/common')
 
 exports.getAll = async (req, res) => {
 	try {
@@ -72,7 +72,7 @@ exports.delete = async (req, res) => {
 			id: req?.params?.id
 		})
 	} catch (err) {
-		return res.status(500).json({ status: 'error', message: err.message })
+		return deleteJsonError(res, err)
 	}
 }
 

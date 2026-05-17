@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const dbFunctions = require('../utils/mongooseDbFunctions')
 const model = require('../models/defaultTransactionValue')
-const { sendCreateUpdateSuccessResponse, populateCategoryAndSubCategory } = require('../utils/common')
+const { sendCreateUpdateSuccessResponse, populateCategoryAndSubCategory, deleteJsonError } = require('../utils/common')
 
 exports.getAll = async (req, res) => {
 	try {
@@ -34,13 +34,11 @@ exports.getDefaultTransactionValuesByCategoryAndSubCategory = async (req, res) =
 		})
 
 		if (items.length === 0)
-			return res
-				.status(404)
-				.json({
-					status: 'error',
-					message: 'There are no default transaction values for this category and subcategory',
-					code: 'no-error-needed'
-				})
+			return res.status(404).json({
+				status: 'error',
+				message: 'There are no default transaction values for this category and subcategory',
+				code: 'no-error-needed'
+			})
 
 		return res.json({
 			status: 'success',
@@ -96,7 +94,7 @@ exports.delete = async (req, res) => {
 			id: req?.params?.id
 		})
 	} catch (err) {
-		return res.status(500).json({ status: 'error', message: err.message })
+		return deleteJsonError(res, err)
 	}
 }
 

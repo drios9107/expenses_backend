@@ -1,6 +1,11 @@
 const dbFunctions = require('../utils/mongooseDbFunctions')
 const model = require('../models/user')
-const { sendCreateUpdateSuccessResponse, createUser, userSearchCommonOptions } = require('../utils/common')
+const {
+	sendCreateUpdateSuccessResponse,
+	createUser,
+	userSearchCommonOptions,
+	deleteJsonError
+} = require('../utils/common')
 
 exports.getAll = async (req, res) => {
 	try {
@@ -64,7 +69,7 @@ exports.delete = async (req, res) => {
 			id: req?.params?.id
 		})
 	} catch (err) {
-		return res.status(500).json({ status: 'error', message: err.message })
+		return deleteJsonError(res, err)
 	}
 }
 
