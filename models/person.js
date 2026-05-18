@@ -24,4 +24,19 @@ const schema = new mongoose.Schema({
 	}
 })
 
+schema.pre('deleteOne', { document: false, query: true }, async function () {
+	const docToDelete = await this.model.findOne(this.getFilter())
+	if (docToDelete) {
+		const debtModel = mongoose.model('debt')
+		const userModel = mongoose.model('user')
+
+		const [existingDebt, existingUser] = await Promise.all([
+			debtModel.findOne({ person: docToDelete._id }),
+			userModel.findOne({ person: docToDelete._id })
+		])
+
+		if (existingDebt || existingUser) throw new Error(`unable-delete-in-use`)
+	}
+})
+
 module.exports = mongoose.model('person', schema)
