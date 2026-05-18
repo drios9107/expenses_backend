@@ -1,5 +1,5 @@
 require('dotenv').config()
-require('./utils/mongooseConnection')
+const { verifyToken, requestLogger, dbMiddleware } = require('./utils/middlewares')
 const express = require('express')
 const authRouter = require('./routes/auth')
 const userRouter = require('./routes/user')
@@ -14,12 +14,9 @@ const recurrentTransactionRouter = require('./routes/recurrentTransaction')
 const dashboardRouter = require('./routes/dashboard')
 const balanceRouter = require('./routes/balance')
 const functionsRouter = require('./routes/functions')
-const { verifyToken, requestLogger } = require('./utils/middlewares')
 const app = express()
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
-
-// app.use(cors({ origin: true, credentials: true }));
 
 const allowedOrigins = ['https://expenses91-opal.vercel.app', 'http://localhost:3000']
 
@@ -39,6 +36,7 @@ app.use(
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(cookieParser())
+app.use(dbMiddleware)
 app.use(verifyToken)
 app.use(requestLogger)
 

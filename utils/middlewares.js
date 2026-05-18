@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const connectDB = require('./mongooseConnection')
 const dbFunctions = require('./mongooseDbFunctions')
 const userModel = require('../models/user')
 const { populateRole } = require('./common')
@@ -79,4 +80,14 @@ exports.requestLogger = (req, res, next) => {
 	})
 
 	next()
+}
+
+exports.dbMiddleware = async (req, res, next) => {
+	try {
+		await connectDB()
+		next()
+	} catch (err) {
+		console.error('DB connection error:', err)
+		res.status(500).json({ error: 'Database connection failed' })
+	}
 }
