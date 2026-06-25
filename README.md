@@ -2,53 +2,6 @@
 
 A comprehensive expense tracking and management backend API built with Express.js and MongoDB. This project provides a complete system for tracking expenses, managing users, roles, categories, and generating financial reports and dashboards.
 
-## Table of Contents
-
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Environment Variables](#environment-variables)
-- [Running the Application](#running-the-application)
-- [Project Structure](#project-structure)
-- [API Endpoints](#api-endpoints)
-- [Authentication](#authentication)
-- [Database](#database)
-- [Logging](#logging)
-- [Deployment](#deployment)
-
-## Features
-
-- **User Management**: User registration, login, and profile management with role-based access control
-- **Authentication**: JWT-based authentication with OAuth token verification
-- **Expense Tracking**: Record and categorize transactions with support for recurring expenses
-- **Budget Management**: Set default transaction values and track spending against budgets
-- **Debt Tracking**: Manage debts and payments between users
-- **Categories & Subcategories**: Organize expenses with hierarchical categorization
-- **Dashboard Analytics**: Comprehensive dashboard with expense statistics and insights
-- **Balance Reports**: Generate balance reports and financial summaries
-- **Roles & Permissions**: Admin and user role management with authorization checks
-- **Email Notifications**: Send emails via configured email templates
-- **Logging**: Comprehensive request/response logging with Pino logger
-- **Database Backups**: Automated database backup functionality
-
-## Tech Stack
-
-- **Runtime**: Node.js
-- **Framework**: Express.js 4.21.0
-- **Database**: MongoDB with Mongoose 8.7.1
-- **Authentication**: JWT (jsonwebtoken)
-- **Security**: bcryptjs for password hashing
-- **Email**: Nodemailer
-- **Logging**: Pino
-- **Utilities**:
-    - moment/moment-range for date handling
-    - archiver for backup compression
-    - googleapis for external integrations
-    - cookie-parser for cookie handling
-    - CORS enabled for cross-origin requests
-- **Development**: Nodemon for hot reloading
-- **Deployment**: Vercel
-
 ## Installation
 
 ### Prerequisites
@@ -73,12 +26,12 @@ A comprehensive expense tracking and management backend API built with Express.j
     ```
 
 3. **Create environment file**
+
     ```bash
     cp .env.example .env
     ```
-    (See [Environment Variables](#environment-variables) section)
 
-## Environment Variables
+4. **Configure environment variables**
 
 Create a `.env` file in the root directory with the following variables:
 
@@ -106,93 +59,13 @@ NODE_ENV=development
 PORT=3001
 ```
 
-## Running the Application
-
-### Development
+### Run locally
 
 ```bash
 npm run dev
 ```
 
-This starts the server with Nodemon for automatic restart on file changes. The server will run on `http://localhost:3001`.
-
-### Production
-
-```bash
-node index.js
-```
-
-## Project Structure
-
-```
-expenses_backend/
-├── index.js                      # Application entry point
-├── package.json                  # Project dependencies
-├── vercel.json                   # Vercel deployment config
-├── controllers/                  # Business logic handlers
-│   ├── auth.js
-│   ├── user.js
-│   ├── role.js
-│   ├── person.js
-│   ├── debt.js
-│   ├── category.js
-│   ├── subCategory.js
-│   ├── transaction.js
-│   ├── defaultTransactionValue.js
-│   ├── recurrentTransaction.js
-│   ├── dashboard.js
-│   ├── functions.js
-│   └── email.js
-├── models/                       # Mongoose schemas
-│   ├── user.js
-│   ├── role.js
-│   ├── person.js
-│   ├── debt.js
-│   ├── category.js
-│   ├── subCategory.js
-│   ├── transaction.js
-│   ├── defaultTransactionValue.js
-│   ├── recurrentTransaction.js
-│   └── balance.js
-├── routes/                       # API route definitions
-│   ├── auth.js
-│   ├── user.js
-│   ├── role.js
-│   ├── person.js
-│   ├── debt.js
-│   ├── category.js
-│   ├── subCategory.js
-│   ├── transaction.js
-│   ├── defaultTransactionValue.js
-│   ├── recurrentTransaction.js
-│   ├── dashboard.js
-│   ├── balance.js
-│   └── functions.js
-├── utils/                        # Utility functions and middleware
-│   ├── middlewares.js           # Authentication & logging middleware
-│   ├── mongooseConnection.js    # Database connection
-│   ├── mongooseDbFunctions.js   # Database operations
-│   ├── common.js                # Common helper functions
-│   ├── pino.conf.js             # Logger configuration
-│   ├── categoryHandlers.js      # Category-related utilities
-│   ├── default/                 # Default data files
-│   │   ├── users.json
-│   │   ├── roles.json
-│   │   ├── categories.json
-│   │   ├── subCategories.json
-│   │   └── transactionDefaultValues.json
-│   └── emailTemplates/          # Email template definitions
-│       └── contactEmail.js
-├── logs/                         # Application logs (organized by route)
-│   ├── auth/
-│   ├── balance/
-│   ├── dashboard/
-│   ├── functions/
-│   ├── transactions/
-│   └── ...
-└── backup/                       # Database backups
-    └── expensesDB_YYYY-MM-DD_HH-mm-ss/
-```
+The server will run on `http://localhost:3001`.
 
 ## API Endpoints
 
@@ -328,35 +201,6 @@ Log entries include:
 - Error details (if applicable)
 - Request payload
 
-## Deployment
-
-### Vercel Deployment
-
-The project is configured for deployment on Vercel using the `vercel.json` configuration file. The setup includes:
-
-1. **Build Configuration**: Node.js runtime with specified files to include
-2. **Route Handling**: All routes are directed to `index.js`
-
-### Deployment Steps
-
-1. Push code to GitHub repository
-2. Connect repository to Vercel
-3. Set environment variables in Vercel dashboard
-4. Vercel automatically deploys on push to main branch
-
-**Allowed Origins** (CORS):
-
-- Production: `https://expenses91-opal.vercel.app`
-- Development: `http://localhost:3000`
-
-## CORS Configuration
-
-The API is configured to accept requests from specified origins only:
-
-```javascript
-const allowedOrigins = ['https://expenses91-opal.vercel.app', 'http://localhost:3000']
-```
-
 ## Error Handling
 
 The API returns standardized error responses:
@@ -389,7 +233,7 @@ ISC
 
 ## Author
 
-sirius91
+drios9107
 
 ---
 

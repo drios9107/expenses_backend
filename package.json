@@ -6,7 +6,7 @@
 		"dev": "nodemon --ignore backup/ index.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"author": "sirius91",
+	"author": "drios9107",
 	"license": "ISC",
 	"description": "",
 	"dependencies": {
