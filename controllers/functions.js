@@ -180,7 +180,7 @@ const getCategoryAndSubcategoryChartData = async search => {
  */
 const getExpensesAndIncomesCounters = async search => {
 	const results = await transactionsModel.aggregate([
-		{ $match: { ...search, type: 'cup' } },
+		{ $match: { ...search, type: process.env.NODE_DEFAULT_CURRENCY } },
 		{
 			$facet: {
 				totals: [

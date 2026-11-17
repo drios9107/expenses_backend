@@ -106,7 +106,7 @@ exports.createUser = async req => {
 
 exports.emptyDataForCharts = { labels: [], values: [] }
 
-exports.getBalanceFunction = async (type = 'cup') => {
+exports.getBalanceFunction = async (type = process.env.NODE_DEFAULT_CURRENCY) => {
 	try {
 		const [income, expense] = await Promise.all([
 			getTransactionsTotal(type, false),
@@ -167,7 +167,7 @@ exports.currentMonthSearch = (currentMonth, currentYear) => {
 exports.getCurrentMonthIncomeTransactions = async (currentMonth, currentYear) => {
 	const search = this.currentMonthSearch(currentMonth, currentYear)
 	search['isExpense'] = false
-	search['type'] = 'cup'
+	search['type'] = process.env.NODE_DEFAULT_CURRENCY
 
 	const currentMonthTransactions = await dbFunctions.find(transactionsModel, { search, sort: { amount: -1 } })
 	return currentMonthTransactions
@@ -190,7 +190,7 @@ exports.getCurrentMonthTransactions = async (
 	let sort = { amount: -1 }
 	if (!options?.showAll) {
 		search['isExpense'] = true
-		search['type'] = 'cup'
+		search['type'] = process.env.NODE_DEFAULT_CURRENCY
 	}
 
 	if (options?.categoryId) search['category'] = options.categoryId

@@ -60,7 +60,7 @@ const schema = new mongoose.Schema({
 })
 // schema.post('save', async (data, next) => {
 //     try {
-//         if (data?.type === 'cup') {
+//         if (data?.type === process.env.NODE_DEFAULT_CURRENCY) {
 //             const balance = (await balanceModel.find({}).exec())?.[0];
 //             if (balance && !data?.isRecurrent) {
 //                 const balanceResult = data?.isExpense ?
@@ -81,7 +81,7 @@ const schema = new mongoose.Schema({
 //         const id = this.getFilter()["_id"];
 //         const transaction = await this.findOne({ _id: id }).clone();
 
-//         if (transaction?.type === 'cup') {
+//         if (transaction?.type === process.env.NODE_DEFAULT_CURRENCY) {
 //             const balance = (await balanceModel.find({}).exec())?.[0];
 
 //             const balanceResult = transaction?.isExpense ?
